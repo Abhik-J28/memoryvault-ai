@@ -3,19 +3,21 @@ MemoryVault AI - FastAPI Application Entry Point
 =================================================
 Phase 1, Step 2: Database Connection
 Phase 2, Step 4: Analytics Router
+Phase 3, Step 3: Search Router
 
 This module initialises the FastAPI application instance, configures
 CORS middleware, and registers:
   - /api/health            -> basic API liveness check
   - /api/health/db         -> Supabase connectivity probe against session_logs
   - /api/v1/analytics/*   -> ML evaluation metrics for the Evaluator drawer
+  - /api/v1/router/search -> Item location prediction and spatial routing
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import supabase
-from app.routers import analytics
+from app.routers import analytics, search
 
 # ---------------------------------------------------------------------------
 # Application instance
@@ -53,6 +55,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 app.include_router(analytics.router)
+app.include_router(search.router)
 
 # ---------------------------------------------------------------------------
 # Health Check Endpoint
