@@ -1,0 +1,117 @@
+# ============================================================
+# MemoryVault AI — Root .gitignore
+# Phase 1, Step 4 — DevPlan §4 Phase 1
+# ============================================================
+# Covers the full monorepo (backend/ + frontend/).
+# Sub-directory .gitignore files add framework-specific rules
+# on top of these baseline exclusions.
+# ============================================================
+
+
+# ============================================================
+# Python — Virtual Environment
+# ============================================================
+venv/
+.venv/
+env/
+.env_python/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+# Python packaging / build artefacts
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+coverage.xml
+
+# mypy / type checkers
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# ============================================================
+# Environment & Secrets  ← NEVER commit these
+# ============================================================
+.env
+.env.*
+*.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+
+# ============================================================
+# Node / Frontend
+# ============================================================
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnp
+.pnp.*
+
+# Next.js build output
+.next/
+**/.next/
+/out/
+/build/
+*.tsbuildinfo
+next-env.d.ts
+
+
+# ============================================================
+# OS / Editor artefacts
+# ============================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.pem
+*.key
+
+# VSCode (keep settings.json if desired, ignore workspace state)
+.vscode/extensions.json
+.vscode/.ropeproject
+
+# JetBrains
+.idea/
+*.iml
+
+# Vercel
+.vercel
+
+
+# ============================================================
+# Miscellaneous
+# ============================================================
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
