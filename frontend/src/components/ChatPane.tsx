@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Brain, Send, RotateCcw } from 'lucide-react';
 import QuickChips from './QuickChips';
 import type { ChatResponse, RouteStep, LayoutData, PredictionData } from '@/lib/api';
@@ -64,62 +64,65 @@ export default function ChatPane({ sessionId, onRouteData, onResetSearch }: Chat
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSend = async (text: string, isInit = false) => {
-    if (!isInit && !text.trim()) return;
+  const handleSend = useCallback(
+    async (text: string, isInit = false) => {
+      if (!isInit && !text.trim()) return;
 
-    // Disable previous quick replies
-    setChipDisabled(true);
+      // Disable previous quick replies
+      setChipDisabled(true);
 
-    // Add user message (skip for initial greeting)
-    if (!isInit && text.trim()) {
-      const userMsg: Message = {
-        id: `user-${Date.now()}`,
-        role: 'user',
-        text: text.trim(),
-      };
-      setMessages((prev) => [...prev, userMsg]);
-    }
-
-    setInput('');
-    setIsTyping(true);
-
-    try {
-      const response: ChatResponse = await sendChatMessage(
-        sessionId,
-        isInit ? '' : text.trim(),
-        dialogueState,
-        context,
-      );
-
-      setDialogueState(response.state);
-      setContext(response.context);
-
-      const botMsg: Message = {
-        id: `bot-${Date.now()}`,
-        role: 'bot',
-        text: response.bot_message,
-        quickReplies: response.quick_replies,
-      };
-
-      setMessages((prev) => [...prev, botMsg]);
-      setChipDisabled(false);
-
-      // If route data is available, send to parent
-      if (response.route_data && response.layout && response.prediction) {
-        onRouteData(response.route_data, response.layout, response.prediction);
+      // Add user message (skip for initial greeting)
+      if (!isInit && text.trim()) {
+        const userMsg: Message = {
+          id: `user-${Date.now()}`,
+          role: 'user',
+          text: text.trim(),
+        };
+        setMessages((prev) => [...prev, userMsg]);
       }
-    } catch {
-      const errorMsg: Message = {
-        id: `bot-err-${Date.now()}`,
-        role: 'bot',
-        text: '⚠️ Something went wrong connecting to the backend. Please make sure the server is running on port 8000.',
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setIsTyping(false);
-      inputRef.current?.focus();
-    }
-  };
+
+      setInput('');
+      setIsTyping(true);
+
+      try {
+        const response: ChatResponse = await sendChatMessage(
+          sessionId,
+          isInit ? '' : text.trim(),
+          dialogueState,
+          context,
+        );
+
+        setDialogueState(response.state);
+        setContext(response.context);
+
+        const botMsg: Message = {
+          id: `bot-${Date.now()}`,
+          role: 'bot',
+          text: response.bot_message,
+          quickReplies: response.quick_replies,
+        };
+
+        setMessages((prev) => [...prev, botMsg]);
+        setChipDisabled(false);
+
+        // If route data is available, send to parent
+        if (response.route_data && response.layout && response.prediction) {
+          onRouteData(response.route_data, response.layout, response.prediction);
+        }
+      } catch {
+        const errorMsg: Message = {
+          id: `bot-err-${Date.now()}`,
+          role: 'bot',
+          text: '⚠️ Something went wrong connecting to the backend. Please make sure the server is running on port 8000.',
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+      } finally {
+        setIsTyping(false);
+        inputRef.current?.focus();
+      }
+    },
+    [sessionId, dialogueState, context, onRouteData],
+  );
 
   const handleChipSelect = (chip: string) => {
     if (chipDisabled) return;
