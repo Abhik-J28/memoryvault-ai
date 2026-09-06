@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* ============================================================
+   MemoryVault AI — Design System CSS Tokens
+   UI/UX Specification §6 — Colors, Typography, Spacing
+   ============================================================ */
+
+:root {
+  /* --- Color Palette (§6.1) --- */
+  --color-brand-primary:  #0284c7;  /* Sky 600    — buttons, active badges, user bubbles */
+  --color-brand-dark:     #0f172a;  /* Slate 900  — header bg, primary headings          */
+  --color-bg-base:        #f8fafc;  /* Slate 50   — main canvas & card inset backgrounds */
+  --color-surface-card:   #ffffff;  /* Pure White — route cards, bot bubbles             */
+  --color-success:        #059669;  /* Emerald 600— "Found Here" buttons, high confidence*/
+  --color-warning:        #d97706;  /* Amber 600  — low-certainty indicators             */
+  --color-border:         #e2e8f0;  /* Slate 200  — card borders, dividers               */
+
+  /* Legacy tokens (kept for Tailwind theme compatibility) */
+  --background: var(--color-bg-base);
+  --foreground: #0f172a;
+}
+
+/* ============================================================
+   Base Reset & Typography (§6.2)
+   Native system font stack — zero download latency
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;          /* ~8.5pt body text per spec               */
+  line-height: 1.45;        /* §6.2 body line-height                   */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Tailwind v4 @theme token bridge
+   ============================================================ */
+
+@theme inline {
+  --color-background: var(--color-bg-base);
+  --color-foreground: var(--foreground);
+}
