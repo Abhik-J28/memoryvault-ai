@@ -1,11 +1,12 @@
 /**
  * MemoryVault AI - Primary Page
  * ==============================
- * Phase 1, Step 3: Top Utility Bar
+ * Phase 1–6 Combined
  *
- * Screen 1 of the UI/UX Specification — Top Utility Bar only.
- * Conversational chat thread, quick chips, and route cards are
- * deferred to later phases.
+ * Full application layout:
+ *   - Top Utility Bar (brand, status pill, analytics button)
+ *   - 55/45 Split-Pane: Chat Pane (left) + Route Inspector (right)
+ *   - Analytics Drawer (slide-over)
  *
  * Design tokens applied (from UI/UX Spec §6.1):
  *   --color-brand-dark   : #0f172a  (Slate 900)  — header background
@@ -17,14 +18,26 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import { BarChart2, Brain, Wifi, WifiOff } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { BarChart2, Brain, Wifi, WifiOff, RotateCcw } from 'lucide-react';
+import ChatPane from '@/components/ChatPane';
+import RouteInspector from '@/components/RouteInspector';
+import AnalyticsDrawer from '@/components/AnalyticsDrawer';
+import type { RouteStep, LayoutData, PredictionData } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 type BackendStatus = 'checking' | 'connected' | 'offline';
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function generateSessionId(): string {
+  return `mv-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -86,6 +99,14 @@ function StatusPill({ status }: { status: BackendStatus }) {
 
 export default function Home() {
   const [backendStatus, setBackendStatus] = useState<BackendStatus>('checking');
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [sessionId, setSessionId] = useState(() => generateSessionId());
+
+  // Route data state (populated when chat reaches RESULT state)
+  const [routeData, setRouteData] = useState<RouteStep[] | null>(null);
+  const [layout, setLayout] = useState<LayoutData | null>(null);
+  const [prediction, setPrediction] = useState<PredictionData | null>(null);
+  const [chatContext, setChatContext] = useState<Record<string, unknown>>({});
 
   // Probe the FastAPI health endpoint on mount
   useEffect(() => {
@@ -95,7 +116,6 @@ export default function Home() {
     const checkHealth = async () => {
       try {
         const res = await fetch(`${backendUrl}/api/health`, {
-          // Short timeout so we fail fast rather than hanging for 30s
           signal: AbortSignal.timeout(5000),
         });
         setBackendStatus(res.ok ? 'connected' : 'offline');
@@ -107,42 +127,58 @@ export default function Home() {
     checkHealth();
   }, []);
 
+  // Reset conversation and state to search for another lost item
+  const handleResetSearch = useCallback(() => {
+    setSessionId(generateSessionId());
+    setRouteData(null);
+    setLayout(null);
+    setPrediction(null);
+    setChatContext({});
+  }, []);
+
+  // Callback from ChatPane when route data arrives
+  const handleRouteData = useCallback(
+    (route: RouteStep[], layoutData: LayoutData, pred: PredictionData) => {
+      setRouteData(route);
+      setLayout(layoutData);
+      setPrediction(pred);
+    },
+    [],
+  );
+
   return (
-    /*
-     * Page canvas — Slate 50 (#f8fafc) per design token --color-bg-base
-     * Full viewport height so future split-pane content fills naturally.
-     */
     <div
       className="flex min-h-screen flex-col"
       style={{ backgroundColor: '#f8fafc' }}
     >
       {/* ------------------------------------------------------------------ */}
-      {/* TOP UTILITY BAR — Screen 1, UI/UX Spec §4                          */}
-      {/* Brand dark (#0f172a / Slate 900) background per design token        */}
+      {/* TOP UTILITY BAR                                                     */}
       {/* ------------------------------------------------------------------ */}
       <header
-        className="flex items-center justify-between px-6 py-3 shadow-lg"
-        style={{ backgroundColor: '#0f172a' }}
+        className="flex items-center justify-between px-6 py-3 shadow-md"
+        style={{
+          backgroundColor: '#0f172a',
+          borderBottom: '1px solid #1e293b',
+        }}
         role="banner"
       >
         {/* ---- Left: Logo + Brand name ---- */}
         <div className="flex items-center gap-3">
-          {/* Brain icon as logo stand-in — matches cognitive-assistant theme */}
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg"
+            className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md"
             style={{ backgroundColor: '#0284c7' }}
             aria-hidden="true"
           >
-            <Brain size={18} color="#ffffff" />
+            <Brain size={20} color="#ffffff" />
           </div>
 
           <div className="flex flex-col leading-tight">
             <span
-              className="text-lg font-extrabold tracking-tight"
+              className="text-lg font-black tracking-tight"
               style={{
                 color: '#f8fafc',
                 fontFamily:
-                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+                  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 lineHeight: 1.2,
               }}
             >
@@ -150,23 +186,36 @@ export default function Home() {
             </span>
             <span
               className="text-[10px] font-bold uppercase tracking-widest"
-              style={{ color: '#475569', letterSpacing: '0.5px' }}
+              style={{ color: '#0284c7', letterSpacing: '0.6px' }}
             >
-              Item Prediction &amp; Search Router
+              Context-Aware Misplaced Item Prediction
             </span>
           </div>
         </div>
 
-        {/* ---- Centre / Right: Status pill + Analytics button ---- */}
-        <div className="flex items-center gap-4">
-          {/* Backend status indicator pill */}
+        {/* ---- Centre / Right: Search Another + Status pill + Analytics button ---- */}
+        <div className="flex items-center gap-3">
+          {/* Primary Action: Search Another Item */}
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition-all duration-200 shadow-sm hover:shadow-md"
+            style={{
+              backgroundColor: '#0284c7',
+              borderColor: '#0284c7',
+            }}
+            onClick={handleResetSearch}
+            title="Start a new prediction session for another misplaced item"
+          >
+            <RotateCcw size={14} className="shrink-0" />
+            Search Another Item
+          </button>
+
           <StatusPill status={backendStatus} />
 
-          {/* Evaluator Analytics toggle — wires to future metrics drawer (Phase 6) */}
           <button
             id="evaluator-analytics-toggle"
             type="button"
-            className="inline-flex items-center gap-2 rounded-lg border px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all duration-200"
+            className="inline-flex items-center gap-2 rounded-lg border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide transition-all duration-200"
             style={{
               borderColor: '#334155',
               color: '#94a3b8',
@@ -186,6 +235,7 @@ export default function Home() {
                 '#334155';
               (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8';
             }}
+            onClick={() => setAnalyticsOpen(true)}
             aria-label="Open Evaluator Analytics drawer"
           >
             <BarChart2 size={14} className="shrink-0" />
@@ -195,22 +245,42 @@ export default function Home() {
       </header>
 
       {/* ------------------------------------------------------------------ */}
-      {/* MAIN WORKSPACE — placeholder canvas (chat + route panes follow)     */}
+      {/* MAIN WORKSPACE — 55/45 split pane                                  */}
       {/* ------------------------------------------------------------------ */}
-      <main
-        className="flex flex-1 items-center justify-center"
-        style={{ backgroundColor: '#f8fafc' }}
-        aria-label="Main workspace"
-      >
-        <div className="text-center">
-          <p
-            className="text-sm font-medium"
-            style={{ color: '#94a3b8' }}
-          >
-            Conversational workspace loads in Phase 5.
-          </p>
+      <main className="split-pane" aria-label="Main workspace">
+        {/* Left: Conversational Triage (55%) */}
+        <div className="split-left">
+          <ChatPane
+            key={sessionId}
+            sessionId={sessionId}
+            onRouteData={handleRouteData}
+            onResetSearch={handleResetSearch}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="split-divider" />
+
+        {/* Right: Route Inspector (45%) */}
+        <div className="split-right">
+          <RouteInspector
+            routeData={routeData}
+            layout={layout}
+            prediction={prediction}
+            sessionId={sessionId}
+            context={chatContext}
+            onResetSearch={handleResetSearch}
+          />
         </div>
       </main>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* ANALYTICS DRAWER (Phase 6)                                         */}
+      {/* ------------------------------------------------------------------ */}
+      <AnalyticsDrawer
+        isOpen={analyticsOpen}
+        onClose={() => setAnalyticsOpen(false)}
+      />
     </div>
   );
 }

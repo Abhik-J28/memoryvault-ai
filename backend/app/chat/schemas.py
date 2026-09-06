@@ -1,0 +1,97 @@
+"""
+MemoryVault AI — Pydantic Schemas
+==================================
+Phase 4
+
+Request / response models for the chat and analytics API endpoints.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Optional
+
+from pydantic import BaseModel, Field
+
+
+# ---------------------------------------------------------------------------
+# Chat
+# ---------------------------------------------------------------------------
+
+
+class ChatRequest(BaseModel):
+    """Payload sent from the frontend on every user interaction."""
+
+    session_id: str = Field(..., description="UUID identifying the current chat session")
+    message: str = Field(..., description="User's text input or quick-reply value")
+    state: str = Field(
+        default="GREETING",
+        description="Current dialogue state (managed by the frontend)",
+    )
+    context: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Accumulated context collected so far (item, time, weather …)",
+    )
+
+
+class RouteStep(BaseModel):
+    """A single step in the generated search checklist."""
+
+    room: str
+    label: str
+    probability: float
+    distance_from_previous: float
+    cumulative_distance: float
+    x: int
+    y: int
+    path_from_previous: list[str]
+
+
+class ChatResponse(BaseModel):
+    """Payload returned to the frontend after processing a chat turn."""
+
+    session_id: str
+    bot_message: str
+    quick_replies: list[str] = Field(default_factory=list)
+    state: str
+    context: dict[str, Any] = Field(default_factory=dict)
+    route_data: Optional[list[RouteStep]] = None
+    layout: Optional[dict[str, Any]] = None
+    prediction: Optional[dict[str, Any]] = None
+
+
+# ---------------------------------------------------------------------------
+# Feedback
+# ---------------------------------------------------------------------------
+
+
+class FeedbackRequest(BaseModel):
+    """Sent when the user clicks "Found Here" on a route card."""
+
+    session_id: str
+    item_type: str
+    found_location: str
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Analytics (response-only)
+# ---------------------------------------------------------------------------
+
+
+class AnalyticsMetrics(BaseModel):
+    """Aggregated ML model performance metrics."""
+
+    accuracy: float
+    top3_accuracy: float
+    roc_auc_macro: float
+    classification_report: dict[str, Any]
+    confusion_matrix: list[list[int]]
+    class_labels: list[str]
+    roc_curves: dict[str, Any]
+
+
+class ClusterData(BaseModel):
+    """PCA cluster visualisation data."""
+
+    points: list[dict[str, Any]]
+    centroids: list[dict[str, Any]]

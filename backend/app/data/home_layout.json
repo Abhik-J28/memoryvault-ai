@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "description": "MemoryVault AI — Residential flat graph topology for A* search routing",
+    "units": "meters (distances), pixels (coordinates for SVG visualization)",
+    "coordinate_space": { "width": 800, "height": 600 }
+  },
+  "rooms": {
+    "entrance_hallway": {
+      "label": "Entrance Hallway",
+      "x": 400,
+      "y": 540,
+      "icon": "door"
+    },
+    "living_room": {
+      "label": "Living Room",
+      "x": 250,
+      "y": 380,
+      "icon": "sofa"
+    },
+    "kitchen": {
+      "label": "Kitchen",
+      "x": 580,
+      "y": 380,
+      "icon": "utensils"
+    },
+    "dining_area": {
+      "label": "Dining Area",
+      "x": 420,
+      "y": 380,
+      "icon": "coffee"
+    },
+    "bedroom": {
+      "label": "Bedroom",
+      "x": 130,
+      "y": 200,
+      "icon": "bed"
+    },
+    "study_room": {
+      "label": "Study Room",
+      "x": 350,
+      "y": 150,
+      "icon": "book-open"
+    },
+    "bathroom": {
+      "label": "Bathroom",
+      "x": 550,
+      "y": 150,
+      "icon": "droplets"
+    },
+    "balcony": {
+      "label": "Balcony",
+      "x": 700,
+      "y": 200,
+      "icon": "sun"
+    }
+  },
+  "edges": [
+    { "from": "entrance_hallway", "to": "living_room",  "distance": 3.5 },
+    { "from": "entrance_hallway", "to": "dining_area",  "distance": 2.0 },
+    { "from": "entrance_hallway", "to": "kitchen",      "distance": 4.0 },
+    { "from": "living_room",      "to": "dining_area",  "distance": 2.5 },
+    { "from": "living_room",      "to": "bedroom",      "distance": 4.0 },
+    { "from": "living_room",      "to": "study_room",   "distance": 3.5 },
+    { "from": "dining_area",      "to": "kitchen",      "distance": 2.0 },
+    { "from": "kitchen",          "to": "bathroom",     "distance": 3.0 },
+    { "from": "kitchen",          "to": "balcony",      "distance": 3.5 },
+    { "from": "bedroom",          "to": "study_room",   "distance": 3.0 },
+    { "from": "bedroom",          "to": "bathroom",     "distance": 5.0 },
+    { "from": "study_room",       "to": "bathroom",     "distance": 2.5 },
+    { "from": "bathroom",         "to": "balcony",      "distance": 3.0 }
+  ]
+}
