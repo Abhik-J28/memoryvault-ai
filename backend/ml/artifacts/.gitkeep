@@ -1,0 +1,3 @@
+# placeholder — keeps backend/ml/artifacts/ tracked by Git
+# Serialised model files (.joblib) and JSON summaries are written here
+# by the training scripts.

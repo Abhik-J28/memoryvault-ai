@@ -1,0 +1,1227 @@
+{
+  "pca_variance_ratio": [
+    0.197888,
+    0.186152
+  ],
+  "total_explained_variance": 0.38404,
+  "n_clusters": 3,
+  "cluster_archetypes": {
+    "0": {
+      "name": "High-Fatigue Distracted Placement",
+      "sample_count": 3566,
+      "traits": "Avg fatigue 4.2/5 during daytime (avg 13.2h). Absent-minded placements driven by cognitive load. Dominant item: earphones."
+    },
+    "1": {
+      "name": "Alert Daytime Transit",
+      "sample_count": 3532,
+      "traits": "Avg time 12.6h, avg day-of-week 3.4 (0=Mon, 6=Sun). Low-fatigue (1.8/5) weekday placements. Dominant item: spectacles."
+    },
+    "2": {
+      "name": "Rushed Baggage Drop",
+      "sample_count": 2902,
+      "traits": "Baggage rate 100%, avg time 11.9h. Hands-full drop pattern on entry, often in clear weather. Dominant item: earphones."
+    }
+  },
+  "sample_projections": [
+    {
+      "pca_x": -0.6829,
+      "pca_y": 0.2257,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.2597,
+      "pca_y": 0.0989,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.7478,
+      "pca_y": -1.2049,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.7516,
+      "pca_y": 1.1426,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.3926,
+      "pca_y": 0.5915,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.6113,
+      "pca_y": -1.9635,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.1135,
+      "pca_y": 0.3745,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.9228,
+      "pca_y": -0.1265,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 1.0293,
+      "pca_y": 0.3005,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.3093,
+      "pca_y": 0.4331,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.3909,
+      "pca_y": 1.1388,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.6533,
+      "pca_y": 1.4343,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.4089,
+      "pca_y": 0.7932,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.5496,
+      "pca_y": -1.9693,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.4882,
+      "pca_y": -0.5628,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.3125,
+      "pca_y": 0.2231,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.1704,
+      "pca_y": 0.2308,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.6198,
+      "pca_y": -1.2026,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.9739,
+      "pca_y": 1.0833,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -2.1226,
+      "pca_y": 0.7808,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.9723,
+      "pca_y": -0.1179,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 1.5608,
+      "pca_y": 0.6479,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.3837,
+      "pca_y": 0.7947,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.0725,
+      "pca_y": 1.076,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.8376,
+      "pca_y": 0.0787,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.2379,
+      "pca_y": 0.2896,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.7063,
+      "pca_y": -1.037,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -1.4442,
+      "pca_y": -0.9146,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 1.3581,
+      "pca_y": 0.5884,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.5948,
+      "pca_y": -0.8845,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.0587,
+      "pca_y": 0.2277,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.9171,
+      "pca_y": -0.0508,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.3108,
+      "pca_y": 0.6618,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.2513,
+      "pca_y": -0.2652,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.1279,
+      "pca_y": -1.9039,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.5762,
+      "pca_y": 2.1514,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.4032,
+      "pca_y": -0.9146,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.8675,
+      "pca_y": -0.2652,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -1.9039,
+      "pca_y": -0.8537,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -1.582,
+      "pca_y": 0.3636,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.9178,
+      "pca_y": -1.2397,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 1.3256,
+      "pca_y": 0.0896,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.659,
+      "pca_y": 1.4489,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.632,
+      "pca_y": -1.2561,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.5016,
+      "pca_y": -0.5478,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.0933,
+      "pca_y": -0.2727,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.6898,
+      "pca_y": -0.9685,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.8797,
+      "pca_y": 1.7746,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.232,
+      "pca_y": -1.1984,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.8138,
+      "pca_y": 0.4261,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.0985,
+      "pca_y": 0.6466,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.1436,
+      "pca_y": -0.1014,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.3277,
+      "pca_y": -1.2486,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.1102,
+      "pca_y": 0.5842,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.1151,
+      "pca_y": 0.2998,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.745,
+      "pca_y": 1.6393,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.6136,
+      "pca_y": 0.5732,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.7998,
+      "pca_y": 0.137,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.5131,
+      "pca_y": 2.1309,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.2349,
+      "pca_y": -1.112,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.3946,
+      "pca_y": -0.4051,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.6322,
+      "pca_y": -0.6123,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.4251,
+      "pca_y": -0.7686,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.3582,
+      "pca_y": -1.1987,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.1088,
+      "pca_y": 0.517,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.1401,
+      "pca_y": 0.6064,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.4244,
+      "pca_y": -1.9594,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.5596,
+      "pca_y": 0.4574,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.3922,
+      "pca_y": 0.0766,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.9294,
+      "pca_y": -1.6103,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.2927,
+      "pca_y": -0.069,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.4574,
+      "pca_y": -0.2664,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.0406,
+      "pca_y": 0.6413,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.5644,
+      "pca_y": 1.0912,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.6118,
+      "pca_y": 0.514,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.1291,
+      "pca_y": -1.5478,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.3133,
+      "pca_y": -0.9732,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.4088,
+      "pca_y": 0.0782,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.8211,
+      "pca_y": -0.619,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.1987,
+      "pca_y": 0.3579,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.3629,
+      "pca_y": 0.7318,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.6695,
+      "pca_y": -0.617,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.8093,
+      "pca_y": -0.2727,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.522,
+      "pca_y": -1.591,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -1.4929,
+      "pca_y": -1.2043,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.0894,
+      "pca_y": 0.9483,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.6889,
+      "pca_y": -0.0042,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -2.0682,
+      "pca_y": 1.5072,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.8548,
+      "pca_y": -0.0689,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.7115,
+      "pca_y": -0.8841,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.6407,
+      "pca_y": 1.4332,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.5345,
+      "pca_y": -1.2656,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.705,
+      "pca_y": 0.6014,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.1669,
+      "pca_y": 0.3547,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.1105,
+      "pca_y": -1.9673,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.928,
+      "pca_y": 1.3085,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.1346,
+      "pca_y": -1.2609,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.9438,
+      "pca_y": -0.9612,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.0432,
+      "pca_y": 0.3745,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.7973,
+      "pca_y": -1.5564,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.8051,
+      "pca_y": -1.4582,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.2794,
+      "pca_y": 0.161,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.7636,
+      "pca_y": 1.1573,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.7607,
+      "pca_y": 1.305,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.9242,
+      "pca_y": -0.981,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.5797,
+      "pca_y": 0.3732,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.8131,
+      "pca_y": -1.738,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.5647,
+      "pca_y": 2.1504,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.0135,
+      "pca_y": -0.9512,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.5292,
+      "pca_y": 1.0757,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.6782,
+      "pca_y": 0.7301,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -1.1538,
+      "pca_y": 0.3703,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -1.2194,
+      "pca_y": -0.2073,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.9837,
+      "pca_y": -0.0695,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.1447,
+      "pca_y": -0.7635,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 1.0373,
+      "pca_y": -1.6066,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.7171,
+      "pca_y": 0.0843,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.5478,
+      "pca_y": 1.6406,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.7828,
+      "pca_y": 0.7779,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.1511,
+      "pca_y": 1.6586,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -2.4349,
+      "pca_y": 1.1337,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.7494,
+      "pca_y": -0.9527,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.3968,
+      "pca_y": 0.4906,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.334,
+      "pca_y": 1.7756,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.6066,
+      "pca_y": -1.9533,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.9839,
+      "pca_y": -0.1168,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.1157,
+      "pca_y": 0.6035,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.4491,
+      "pca_y": -0.0653,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.9565,
+      "pca_y": -0.3349,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.9752,
+      "pca_y": 0.086,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.1046,
+      "pca_y": -0.8892,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -1.6066,
+      "pca_y": -1.2619,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.6548,
+      "pca_y": 0.6421,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 1.2126,
+      "pca_y": 0.8095,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.5766,
+      "pca_y": 0.7295,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.2089,
+      "pca_y": -0.8269,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 1.1518,
+      "pca_y": -0.2421,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.2729,
+      "pca_y": 2.141,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.4807,
+      "pca_y": -0.0576,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.2458,
+      "pca_y": -0.9049,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.05,
+      "pca_y": -1.1183,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.329,
+      "pca_y": 1.0724,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.6084,
+      "pca_y": 0.2916,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.7721,
+      "pca_y": -0.5612,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.0139,
+      "pca_y": 0.9523,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.8627,
+      "pca_y": -0.7601,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.4951,
+      "pca_y": -0.4172,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.1952,
+      "pca_y": -0.2629,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.4075,
+      "pca_y": -0.4118,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.422,
+      "pca_y": -1.0529,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.2885,
+      "pca_y": -1.4039,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.7629,
+      "pca_y": 0.5769,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.4088,
+      "pca_y": -0.9106,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.5467,
+      "pca_y": -1.2497,
+      "cluster_id": 0,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 1.04,
+      "pca_y": -0.8864,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.4052,
+      "pca_y": -0.1945,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.9925,
+      "pca_y": -1.2613,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 1.0174,
+      "pca_y": 0.0485,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -2.3169,
+      "pca_y": 1.8375,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -1.3542,
+      "pca_y": 0.1645,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.7063,
+      "pca_y": -0.98,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.7853,
+      "pca_y": 1.4895,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.5676,
+      "pca_y": 1.4301,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.2208,
+      "pca_y": -0.1148,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 1.1261,
+      "pca_y": 1.7941,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.7595,
+      "pca_y": 0.6512,
+      "cluster_id": 2,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -1.2075,
+      "pca_y": -2.2622,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.3213,
+      "pca_y": 0.15,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.1736,
+      "pca_y": 0.3577,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.9876,
+      "pca_y": 1.1401,
+      "cluster_id": 1,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.2317,
+      "pca_y": 0.356,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": -0.4565,
+      "pca_y": -0.4742,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.3007,
+      "pca_y": -0.2517,
+      "cluster_id": 2,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -0.8417,
+      "pca_y": -0.4778,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.4279,
+      "pca_y": 0.2379,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.6641,
+      "pca_y": -2.2483,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.8799,
+      "pca_y": 0.293,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.1362,
+      "pca_y": 0.4601,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.6454,
+      "pca_y": 1.2873,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.4438,
+      "pca_y": -1.6077,
+      "cluster_id": 0,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 0.9452,
+      "pca_y": 0.0877,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.4024,
+      "pca_y": -0.9081,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.6228,
+      "pca_y": -0.3867,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": -0.3367,
+      "pca_y": 0.2283,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.5677,
+      "pca_y": -0.5586,
+      "cluster_id": 2,
+      "item_type": "keys"
+    },
+    {
+      "pca_x": 0.5442,
+      "pca_y": -1.9649,
+      "cluster_id": 0,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -0.9959,
+      "pca_y": -0.4783,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.1532,
+      "pca_y": 0.7394,
+      "cluster_id": 1,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 1.7961,
+      "pca_y": -0.5364,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 0.9044,
+      "pca_y": 0.9578,
+      "cluster_id": 1,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": -0.6975,
+      "pca_y": 0.8541,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.1712,
+      "pca_y": 0.026,
+      "cluster_id": 2,
+      "item_type": "spectacles"
+    },
+    {
+      "pca_x": 1.6003,
+      "pca_y": -0.909,
+      "cluster_id": 0,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": 1.6982,
+      "pca_y": 1.1619,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    },
+    {
+      "pca_x": -1.1676,
+      "pca_y": -1.5543,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 1.2835,
+      "pca_y": -0.1163,
+      "cluster_id": 1,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -1.1875,
+      "pca_y": 0.3499,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": -2.1846,
+      "pca_y": -0.5639,
+      "cluster_id": 2,
+      "item_type": "wallet"
+    },
+    {
+      "pca_x": 0.5342,
+      "pca_y": -0.9098,
+      "cluster_id": 0,
+      "item_type": "backpack"
+    },
+    {
+      "pca_x": 0.1218,
+      "pca_y": 0.4348,
+      "cluster_id": 1,
+      "item_type": "earphones"
+    }
+  ]
+}
