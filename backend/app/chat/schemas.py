@@ -31,6 +31,10 @@ class ChatRequest(BaseModel):
         default_factory=dict,
         description="Accumulated context collected so far (item, time, weather …)",
     )
+    username: Optional[str] = Field(
+        default=None,
+        description="Logged-in username if authenticated",
+    )
 
 
 class RouteStep(BaseModel):
@@ -57,6 +61,35 @@ class ChatResponse(BaseModel):
     route_data: Optional[list[RouteStep]] = None
     layout: Optional[dict[str, Any]] = None
     prediction: Optional[dict[str, Any]] = None
+    custom_user_rooms: list[str] = Field(default_factory=list, description="User-pinned custom habit rooms for pink map highlights")
+
+
+# ---------------------------------------------------------------------------
+# Auth Models
+# ---------------------------------------------------------------------------
+
+
+class AuthRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    success: bool
+    error: Optional[str] = None
+    user: Optional[dict[str, Any]] = None
+
+
+# ---------------------------------------------------------------------------
+# Custom Location Models
+# ---------------------------------------------------------------------------
+
+
+class CustomLocationRequest(BaseModel):
+    username: str
+    item_type: str
+    room: str
+    notes: Optional[str] = ""
 
 
 # ---------------------------------------------------------------------------

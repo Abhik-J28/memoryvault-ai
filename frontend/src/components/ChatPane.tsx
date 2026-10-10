@@ -29,7 +29,8 @@ interface Message {
 
 interface ChatPaneProps {
   sessionId: string;
-  onRouteData: (route: RouteStep[], layout: LayoutData, prediction: PredictionData) => void;
+  username?: string | null;
+  onRouteData: (route: RouteStep[], layout: LayoutData, prediction: PredictionData, customUserRooms?: string[]) => void;
   onResetSearch?: () => void;
 }
 
@@ -37,7 +38,7 @@ interface ChatPaneProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function ChatPane({ sessionId, onRouteData, onResetSearch }: ChatPaneProps) {
+export default function ChatPane({ sessionId, username, onRouteData, onResetSearch }: ChatPaneProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -90,6 +91,7 @@ export default function ChatPane({ sessionId, onRouteData, onResetSearch }: Chat
           isInit ? '' : text.trim(),
           dialogueState,
           context,
+          username,
         );
 
         setDialogueState(response.state);
@@ -107,7 +109,7 @@ export default function ChatPane({ sessionId, onRouteData, onResetSearch }: Chat
 
         // If route data is available, send to parent
         if (response.route_data && response.layout && response.prediction) {
-          onRouteData(response.route_data, response.layout, response.prediction);
+          onRouteData(response.route_data, response.layout, response.prediction, response.custom_user_rooms);
         }
       } catch {
         const errorMsg: Message = {
@@ -121,7 +123,7 @@ export default function ChatPane({ sessionId, onRouteData, onResetSearch }: Chat
         inputRef.current?.focus();
       }
     },
-    [sessionId, dialogueState, context, onRouteData],
+    [sessionId, username, dialogueState, context, onRouteData],
   );
 
   const handleChipSelect = (chip: string) => {

@@ -31,6 +31,7 @@ from typing import Any
 
 from app.ml.location_predictor import predict as ml_predict
 from app.search.astar_router import compute_search_route, get_layout
+from app.db_local import get_custom_locations
 
 # ---------------------------------------------------------------------------
 # Item aliases / canonical mapping
@@ -156,6 +157,7 @@ def process_turn(
     message: str,
     state: str,
     context: dict[str, Any],
+    username: str | None = None,
 ) -> dict[str, Any]:
     """
     Process one dialogue turn and return the next state + bot response.
@@ -276,6 +278,12 @@ def process_turn(
         )
         layout = get_layout()
 
+        # ── Fetch User Custom Saved Locations ──
+        custom_user_rooms: list[str] = []
+        if username:
+            saved_locs = get_custom_locations(username, context["item_type"])
+            custom_user_rooms = [loc["room"] for loc in saved_locs]
+
         item_display = context["item_type"].replace("_", " ")
         bot_message = _RESULT_INTRO.format(item=item_display)
 
@@ -283,6 +291,10 @@ def process_turn(
         for i, (room, prob) in enumerate(list(prediction["probabilities"].items())[:3]):
             emoji = ["🥇", "🥈", "🥉"][i]
             bot_message += f"\n{emoji} **{room.replace('_', ' ').title()}** — {prob*100:.1f}% probability"
+
+        if custom_user_rooms:
+            custom_display = ", ".join(r.replace("_", " ").title() for r in custom_user_rooms)
+            bot_message += f"\n\n🌸 **User Saved Habit Location(s)**: {custom_display} (Highlighted in **Pink** on your Route Map!)"
 
         bot_message += _FEEDBACK_ASK
 
@@ -295,6 +307,7 @@ def process_turn(
             "route_data": route,
             "layout": layout,
             "prediction": prediction,
+            "custom_user_rooms": custom_user_rooms,
         }
 
     # ── RESULT (awaiting feedback) ────────────────────────────────────

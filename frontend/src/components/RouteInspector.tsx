@@ -38,6 +38,7 @@ interface RouteInspectorProps {
   prediction: PredictionData | null;
   sessionId: string;
   context: Record<string, unknown>;
+  customUserRooms?: string[];
   onResetSearch?: () => void;
 }
 
@@ -64,11 +65,13 @@ function FloorPlanSVG({
   layout,
   routeData,
   highlightedRoom,
+  customUserRooms = [],
   isFullscreen = false,
 }: {
   layout: LayoutData;
   routeData: RouteStep[] | null;
   highlightedRoom: string | null;
+  customUserRooms?: string[];
   isFullscreen?: boolean;
 }) {
   const { rooms, edges } = layout;
@@ -150,6 +153,19 @@ function FloorPlanSVG({
           <stop offset="0%" stopColor="#047857" />
           <stop offset="100%" stopColor="#059669" />
         </linearGradient>
+
+        <linearGradient id="room-pink-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#be185d" />
+          <stop offset="100%" stopColor="#ec4899" />
+        </linearGradient>
+
+        <filter id="pink-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       {/* Background blueprint canvas */}
@@ -331,6 +347,7 @@ function FloorPlanSVG({
       {Object.entries(rooms).map(([key, room]) => {
         const isHighlighted = highlightedRoom === key;
         const isInRoute = routeData?.some((s) => s.room === key);
+        const isUserSaved = customUserRooms.includes(key);
         const prob = routeData?.find((s) => s.room === key)?.probability;
         const rank = getRoomRank(key);
 
@@ -338,7 +355,11 @@ function FloorPlanSVG({
         let strokeColor = '#475569';
         let strokeW = 2;
 
-        if (isHighlighted) {
+        if (isUserSaved) {
+          gradFill = 'url(#room-pink-grad)';
+          strokeColor = '#f472b6';
+          strokeW = 3.5;
+        } else if (isHighlighted) {
           gradFill = 'url(#room-active-grad)';
           strokeColor = '#38bdf8';
           strokeW = 3.5;
@@ -350,8 +371,25 @@ function FloorPlanSVG({
 
         return (
           <g key={`room-node-${key}`} filter="url(#node-shadow)">
+            {/* Pink Glow Pulse Halo for User Saved Locations */}
+            {isUserSaved && (
+              <circle
+                cx={room.x}
+                cy={room.y}
+                r="46"
+                fill="none"
+                stroke="#ec4899"
+                strokeWidth="3"
+                opacity="0.8"
+                filter="url(#pink-glow)"
+              >
+                <animate attributeName="r" values="36;52;36" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite" />
+              </circle>
+            )}
+
             {/* Animated Pulse Halo for Highlighted / Rank 1 */}
-            {(isHighlighted || rank === 1) && (
+            {!isUserSaved && (isHighlighted || rank === 1) && (
               <circle
                 cx={room.x}
                 cy={room.y}
@@ -436,16 +474,16 @@ function FloorPlanSVG({
                 width="130"
                 height="22"
                 rx="11"
-                fill="#0f172a"
-                fillOpacity="0.9"
-                stroke={isHighlighted ? '#38bdf8' : isInRoute ? '#059669' : '#334155'}
-                strokeWidth="1.5"
+                fill={isUserSaved ? '#831843' : '#0f172a'}
+                fillOpacity="0.95"
+                stroke={isUserSaved ? '#ec4899' : isHighlighted ? '#38bdf8' : isInRoute ? '#059669' : '#334155'}
+                strokeWidth={isUserSaved ? 2 : 1.5}
               />
               <text
                 x={room.x}
                 y={room.y + 51}
                 textAnchor="middle"
-                fill={isHighlighted ? '#ffffff' : '#f1f5f9'}
+                fill={isUserSaved ? '#fbcfe8' : isHighlighted ? '#ffffff' : '#f1f5f9'}
                 fontSize="12"
                 fontWeight="700"
                 fontFamily="system-ui, sans-serif"
@@ -453,6 +491,32 @@ function FloorPlanSVG({
                 {room.label}
               </text>
             </g>
+
+            {/* User Saved Habit Badge */}
+            {isUserSaved && (
+              <g>
+                <rect
+                  x={room.x - 45}
+                  y={room.y - 48}
+                  width="90"
+                  height="18"
+                  rx="9"
+                  fill="#be185d"
+                  stroke="#f472b6"
+                  strokeWidth="1"
+                />
+                <text
+                  x={room.x}
+                  y={room.y - 35}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize="9"
+                  fontWeight="800"
+                >
+                  🌸 User Habit
+                </text>
+              </g>
+            )}
 
             {/* Probability Percentage Badge Pill */}
             {prob !== undefined && (
@@ -663,6 +727,7 @@ export default function RouteInspector({
             layout={layout}
             routeData={routeData}
             highlightedRoom={highlightedRoom}
+            customUserRooms={customUserRooms}
           />
 
           {/* Map Legend Bar */}
@@ -682,6 +747,10 @@ export default function RouteInspector({
             <div className="legend-item">
               <span className="legend-badge med">15%</span>
               <span>Med/Low Prob</span>
+            </div>
+            <div className="legend-item">
+              <span className="px-1.5 py-0.5 rounded bg-pink-600 text-[10px] font-bold text-white">🌸 User Saved</span>
+              <span className="text-pink-300 font-semibold">User Habit</span>
             </div>
           </div>
         </div>
@@ -757,6 +826,7 @@ export default function RouteInspector({
                 layout={layout}
                 routeData={routeData}
                 highlightedRoom={highlightedRoom}
+                customUserRooms={customUserRooms}
                 isFullscreen={true}
               />
             </div>

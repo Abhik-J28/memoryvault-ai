@@ -19,10 +19,12 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2, Brain, Wifi, WifiOff, RotateCcw } from 'lucide-react';
+import { BarChart2, Brain, Wifi, WifiOff, RotateCcw, User, Bookmark, LogOut, UserCheck } from 'lucide-react';
 import ChatPane from '@/components/ChatPane';
 import RouteInspector from '@/components/RouteInspector';
 import AnalyticsDrawer from '@/components/AnalyticsDrawer';
+import AuthModal from '@/components/AuthModal';
+import SavedLocationsModal from '@/components/SavedLocationsModal';
 import type { RouteStep, LayoutData, PredictionData } from '@/lib/api';
 
 // ---------------------------------------------------------------------------
@@ -30,6 +32,11 @@ import type { RouteStep, LayoutData, PredictionData } from '@/lib/api';
 // ---------------------------------------------------------------------------
 
 type BackendStatus = 'checking' | 'connected' | 'offline';
+
+interface UserProfile {
+  username: string;
+  isGuest: boolean;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -60,7 +67,6 @@ function StatusPill({ status }: { status: BackendStatus }) {
         className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
         style={{ backgroundColor: '#064e3b', color: '#6ee7b7' }}
       >
-        {/* Dual-ring pulse animation for the green dot */}
         <span className="relative flex h-2 w-2">
           <span
             className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
@@ -77,7 +83,6 @@ function StatusPill({ status }: { status: BackendStatus }) {
     );
   }
 
-  // offline
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
@@ -100,13 +105,32 @@ function StatusPill({ status }: { status: BackendStatus }) {
 export default function Home() {
   const [backendStatus, setBackendStatus] = useState<BackendStatus>('checking');
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [savedLocationsOpen, setSavedLocationsOpen] = useState(false);
+  
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [sessionId, setSessionId] = useState(() => generateSessionId());
 
-  // Route data state (populated when chat reaches RESULT state)
+  // Route data & custom user habit room overrides
   const [routeData, setRouteData] = useState<RouteStep[] | null>(null);
   const [layout, setLayout] = useState<LayoutData | null>(null);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
+  const [customUserRooms, setCustomUserRooms] = useState<string[]>([]);
   const [chatContext, setChatContext] = useState<Record<string, unknown>>({});
+
+  // Initialize user profile from localStorage or open AuthModal
+  useEffect(() => {
+    const saved = localStorage.getItem('mv_user');
+    if (saved) {
+      try {
+        setCurrentUser(JSON.parse(saved));
+      } catch {
+        setAuthModalOpen(true);
+      }
+    } else {
+      setAuthModalOpen(true);
+    }
+  }, []);
 
   // Probe the FastAPI health endpoint on mount
   useEffect(() => {
@@ -127,21 +151,44 @@ export default function Home() {
     checkHealth();
   }, []);
 
+  const handleSelectUser = (user: UserProfile) => {
+    setCurrentUser(user);
+    localStorage.setItem('mv_user', JSON.stringify(user));
+    setAuthModalOpen(false);
+    handleResetSearch();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('mv_user');
+    setCurrentUser(null);
+    setCustomUserRooms([]);
+    setAuthModalOpen(true);
+  };
+
   // Reset conversation and state to search for another lost item
   const handleResetSearch = useCallback(() => {
     setSessionId(generateSessionId());
     setRouteData(null);
     setLayout(null);
     setPrediction(null);
+    setCustomUserRooms([]);
     setChatContext({});
   }, []);
 
   // Callback from ChatPane when route data arrives
   const handleRouteData = useCallback(
-    (route: RouteStep[], layoutData: LayoutData, pred: PredictionData) => {
+    (
+      route: RouteStep[],
+      layoutData: LayoutData,
+      pred: PredictionData,
+      customRooms?: string[],
+    ) => {
       setRouteData(route);
       setLayout(layoutData);
       setPrediction(pred);
+      if (customRooms) {
+        setCustomUserRooms(customRooms);
+      }
     },
     [],
   );
@@ -193,8 +240,48 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ---- Centre / Right: Search Another + Status pill + Analytics button ---- */}
+        {/* ---- Centre / Right: User Badge + Actions + Status pill + Analytics button ---- */}
         <div className="flex items-center gap-3">
+          {/* User Profile Pill */}
+          {currentUser ? (
+            <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1 text-xs text-slate-200">
+              <User size={13} className="text-sky-400" />
+              <span className="font-bold">
+                {currentUser.isGuest ? 'Guest' : currentUser.username}
+              </span>
+
+              {/* My Saved Places Button */}
+              <button
+                type="button"
+                onClick={() => setSavedLocationsOpen(true)}
+                className="ml-1 flex items-center gap-1 rounded bg-pink-600/30 px-2 py-0.5 text-[11px] font-bold text-pink-300 hover:bg-pink-600 hover:text-white transition-all"
+                title="Manage custom habit location overrides (Pink Map Highlights)"
+              >
+                <Bookmark size={11} />
+                Saved Places
+              </button>
+
+              {/* Switch / Logout */}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="ml-1 text-slate-400 hover:text-red-400 transition-colors"
+                title="Switch or Logout User"
+              >
+                <LogOut size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-1 text-xs font-bold text-sky-300 hover:bg-sky-500/20"
+            >
+              <UserCheck size={13} />
+              Sign In / Register
+            </button>
+          )}
+
           {/* Primary Action: Search Another Item */}
           <button
             type="button"
@@ -253,6 +340,7 @@ export default function Home() {
           <ChatPane
             key={sessionId}
             sessionId={sessionId}
+            username={currentUser?.username}
             onRouteData={handleRouteData}
             onResetSearch={handleResetSearch}
           />
@@ -269,14 +357,28 @@ export default function Home() {
             prediction={prediction}
             sessionId={sessionId}
             context={chatContext}
+            customUserRooms={customUserRooms}
             onResetSearch={handleResetSearch}
           />
         </div>
       </main>
 
       {/* ------------------------------------------------------------------ */}
-      {/* ANALYTICS DRAWER (Phase 6)                                         */}
+      {/* MODALS & DRAWERS                                                   */}
       {/* ------------------------------------------------------------------ */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onSelectUser={handleSelectUser}
+        onClose={() => setAuthModalOpen(false)}
+      />
+
+      <SavedLocationsModal
+        isOpen={savedLocationsOpen}
+        username={currentUser?.username || 'guest'}
+        onClose={() => setSavedLocationsOpen(false)}
+        onLocationsUpdated={handleResetSearch}
+      />
+
       <AnalyticsDrawer
         isOpen={analyticsOpen}
         onClose={() => setAnalyticsOpen(false)}

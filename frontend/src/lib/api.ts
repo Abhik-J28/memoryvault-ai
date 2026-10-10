@@ -37,6 +37,27 @@ export interface ChatResponse {
   route_data?: RouteStep[] | null;
   layout?: LayoutData | null;
   prediction?: PredictionData | null;
+  custom_user_rooms?: string[];
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  error?: string;
+  user?: AuthUser;
+}
+
+export interface CustomLocation {
+  id: number;
+  username: string;
+  item_type: string;
+  room: string;
+  notes?: string;
+  created_at?: string;
 }
 
 export interface PredictionData {
@@ -97,6 +118,7 @@ export async function sendChatMessage(
   message: string,
   state: string,
   context: Record<string, unknown>,
+  username?: string | null,
 ): Promise<ChatResponse> {
   const res = await fetch(`${BACKEND_URL}/api/v1/chat`, {
     method: 'POST',
@@ -106,6 +128,7 @@ export async function sendChatMessage(
       message,
       state,
       context,
+      username: username || null,
     }),
   });
 
@@ -113,6 +136,76 @@ export async function sendChatMessage(
     throw new Error(`Chat API error: ${res.status}`);
   }
 
+  return res.json();
+}
+
+/**
+ * Register a new user account.
+ */
+export async function registerUser(username: string, password: string): Promise<AuthResponse> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  return res.json();
+}
+
+/**
+ * Authenticate user credentials.
+ */
+export async function loginUser(username: string, password: string): Promise<AuthResponse> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  return res.json();
+}
+
+/**
+ * Save custom user location override.
+ */
+export async function saveCustomLocation(
+  username: string,
+  itemType: string,
+  room: string,
+  notes?: string,
+): Promise<{ success: boolean; message?: string }> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/user/custom-locations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, item_type: itemType, room, notes: notes || '' }),
+  });
+  return res.json();
+}
+
+/**
+ * Fetch custom user locations.
+ */
+export async function getCustomLocations(
+  username: string,
+  itemType?: string,
+): Promise<CustomLocation[]> {
+  const query = itemType
+    ? `username=${encodeURIComponent(username)}&item_type=${encodeURIComponent(itemType)}`
+    : `username=${encodeURIComponent(username)}`;
+  const res = await fetch(`${BACKEND_URL}/api/v1/user/custom-locations?${query}`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+/**
+ * Delete a custom location override.
+ */
+export async function deleteCustomLocation(
+  locationId: number,
+  username: string,
+): Promise<{ success: boolean }> {
+  const res = await fetch(
+    `${BACKEND_URL}/api/v1/user/custom-locations/${locationId}?username=${encodeURIComponent(username)}`,
+    { method: 'DELETE' },
+  );
   return res.json();
 }
 

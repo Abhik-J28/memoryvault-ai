@@ -21,8 +21,22 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.chat.dialogue_manager import process_turn
-from app.chat.schemas import ChatRequest, ChatResponse, FeedbackRequest
+from app.chat.schemas import (
+    ChatRequest,
+    ChatResponse,
+    FeedbackRequest,
+    AuthRequest,
+    AuthResponse,
+    CustomLocationRequest,
+)
 from app.db import supabase
+from app.db_local import (
+    register_user,
+    login_user,
+    save_custom_location,
+    get_custom_locations,
+    delete_custom_location,
+)
 
 # ---------------------------------------------------------------------------
 # Application instance
@@ -140,6 +154,7 @@ async def chat(request: ChatRequest) -> dict:
             message=request.message,
             state=request.state,
             context=request.context,
+            username=request.username,
         )
         return result
     except Exception as exc:
@@ -147,6 +162,80 @@ async def chat(request: ChatRequest) -> dict:
             status_code=500,
             detail=f"Chat processing error: {exc}",
         )
+
+
+# ---------------------------------------------------------------------------
+# Authentication Endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post(
+    "/api/v1/auth/register",
+    summary="Register a new unique user",
+    tags=["Auth"],
+    response_model=AuthResponse,
+)
+async def auth_register(request: AuthRequest) -> dict:
+    """Registers a new user account with unique username enforcement."""
+    res = register_user(request.username, request.password)
+    if not res["success"]:
+        return {"success": False, "error": res["error"]}
+    return {"success": True, "user": res["user"]}
+
+
+@app.post(
+    "/api/v1/auth/login",
+    summary="User login authentication",
+    tags=["Auth"],
+    response_model=AuthResponse,
+)
+async def auth_login(request: AuthRequest) -> dict:
+    """Authenticates username & password credentials."""
+    res = login_user(request.username, request.password)
+    if not res["success"]:
+        return {"success": False, "error": res["error"]}
+    return {"success": True, "user": res["user"]}
+
+
+# ---------------------------------------------------------------------------
+# User Custom Saved Locations Endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post(
+    "/api/v1/user/custom-locations",
+    summary="Save a custom item location habit override",
+    tags=["User Adaptive"],
+)
+async def add_custom_location(request: CustomLocationRequest) -> dict:
+    """Saves a user's custom habit location for an item (e.g., keys -> study_room)."""
+    res = save_custom_location(
+        username=request.username,
+        item_type=request.item_type,
+        room=request.room,
+        notes=request.notes or "",
+    )
+    return res
+
+
+@app.get(
+    "/api/v1/user/custom-locations",
+    summary="Get user's custom saved locations",
+    tags=["User Adaptive"],
+)
+async def fetch_custom_locations(username: str, item_type: str | None = None) -> list:
+    """Fetches custom saved location overrides for a user."""
+    return get_custom_locations(username=username, item_type=item_type)
+
+
+@app.delete(
+    "/api/v1/user/custom-locations/{location_id}",
+    summary="Delete a custom saved location override",
+    tags=["User Adaptive"],
+)
+async def remove_custom_location(location_id: int, username: str) -> dict:
+    """Deletes a custom saved item location."""
+    return delete_custom_location(username=username, location_id=location_id)
 
 
 # ---------------------------------------------------------------------------
