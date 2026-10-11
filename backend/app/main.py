@@ -34,6 +34,8 @@ from app.db_local import (
     register_user,
     login_user,
     save_custom_location,
+    record_item_finding,
+    get_item_findings,
     get_custom_locations,
     delete_custom_location,
 )
@@ -250,11 +252,7 @@ async def remove_custom_location(location_id: int, username: str) -> dict:
 )
 async def feedback(request: FeedbackRequest) -> dict:
     """
-    Records a "Found Here" event from the user.
-
-    Attempts to insert the feedback into the Supabase ``session_logs``
-    table.  Returns success even if the DB write fails (graceful
-    degradation).
+    Records a "Found Here" event from the user and logs empirical repeated findings.
     """
     log_entry = {
         "session_id": request.session_id,
@@ -269,7 +267,31 @@ async def feedback(request: FeedbackRequest) -> dict:
         # Graceful degradation — don't fail the user experience
         pass
 
+    # Record into empirical repeated user findings DB (Orange Highlights)
+    # Strictly isolated per authenticated user; guest users are explicitly excluded.
+    username = str(request.username or request.context.get("username") or "").strip().lower()
+    item_type = (request.item_type or str(request.context.get("item_type") or "")).strip().lower()
+    if username and username != "guest" and item_type and request.found_location:
+        try:
+            record_item_finding(username, item_type, request.found_location)
+        except Exception:
+            pass
+
     return {"status": "ok", "message": "Feedback recorded."}
+
+
+@app.get(
+    "/api/v1/user/item-findings",
+    summary="Get empirical item findings for a user",
+    tags=["User"],
+)
+async def list_user_item_findings(username: str, item_type: str | None = None) -> list[dict]:
+    """Return historical repeated finding counts per room for an authenticated user. Guests return empty."""
+    user = (username or "").strip().lower()
+    if not user or user == "guest":
+        return []
+    return get_item_findings(username=user, item_type=item_type)
+
 
 
 # ---------------------------------------------------------------------------

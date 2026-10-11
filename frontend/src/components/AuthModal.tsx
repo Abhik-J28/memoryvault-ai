@@ -1,16 +1,21 @@
 /**
- * MemoryVault AI — Optional Auth Modal
+ * MemoryVault AI — Premium Auth Modal
  * =====================================
- * Startup modal offering 3 user choices:
- *   1. Login (Existing User)
- *   2. Register (New Account with unique username check)
- *   3. Continue as Guest (Skip login & proceed immediately)
+ * Stunning glassmorphism login / register / guest flow
+ * Features:
+ *   - Animated gradient background with floating orbs
+ *   - Smooth tab transitions with framer-motion
+ *   - Password visibility toggle
+ *   - Inline validation with animated error messages
+ *   - "Continue as Guest" with shimmer CTA
  */
 
 'use client';
 
-import { useState } from 'react';
-import { User, Lock, UserPlus, LogIn, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { Mail, Lock, Eye, EyeClosed, ArrowRight, User, UserPlus, ShieldCheck, Sparkles, Brain } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { loginUser, registerUser } from '@/lib/api';
 
 interface AuthModalProps {
@@ -19,12 +24,113 @@ interface AuthModalProps {
   onClose?: () => void;
 }
 
-export default function AuthModal({ isOpen, onSelectUser, onClose }: AuthModalProps) {
+// ---------------------------------------------------------------------------
+// Floating orb particles for background animation
+// ---------------------------------------------------------------------------
+function FloatingOrbs() {
+  return (
+    <div className="auth-orbs-container">
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className={`auth-orb auth-orb-${i + 1}`}
+          animate={{
+            x: [0, 30 * Math.sin(i * 1.2), -20 * Math.cos(i), 0],
+            y: [0, -25 * Math.cos(i * 0.8), 30 * Math.sin(i), 0],
+            scale: [1, 1.15, 0.9, 1],
+          }}
+          transition={{
+            duration: 8 + i * 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Animated input component
+// ---------------------------------------------------------------------------
+function AnimatedInput({
+  icon: Icon,
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  showToggle,
+  onToggle,
+  isVisible,
+}: {
+  icon: React.ElementType;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  showToggle?: boolean;
+  onToggle?: () => void;
+  isVisible?: boolean;
+}) {
+  const [isFocused, setIsFocused] = useState(false);
+
+  return (
+    <div className="auth-field">
+      <label className="auth-label">{label}</label>
+      <div className={cn('auth-input-wrap', isFocused && 'auth-input-wrap--focused')}>
+        <Icon size={16} className="auth-input-icon" />
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          className="auth-input"
+          required
+        />
+        {showToggle && (
+          <button type="button" onClick={onToggle} className="auth-toggle-btn" tabIndex={-1}>
+            {isVisible ? <EyeClosed size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Auth Modal
+// ---------------------------------------------------------------------------
+export default function AuthModal({ isOpen, onSelectUser }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<'welcome' | 'login' | 'register'>('welcome');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Track mouse position for parallax on the card
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useTransform(mouseY, [-300, 300], [3, -3]);
+  const rotateY = useTransform(mouseX, [-300, 300], [-3, 3]);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      mouseX.set(e.clientX - rect.left - rect.width / 2);
+      mouseY.set(e.clientY - rect.top - rect.height / 2);
+    },
+    [mouseX, mouseY],
+  );
+
+  // Reset fields on tab change
+  useEffect(() => {
+    setError(null);
+  }, [activeTab]);
 
   if (!isOpen) return null;
 
@@ -35,7 +141,6 @@ export default function AuthModal({ isOpen, onSelectUser, onClose }: AuthModalPr
       setError('Please enter both username and password.');
       return;
     }
-
     setLoading(true);
     try {
       const res = await loginUser(username.trim(), password);
@@ -45,7 +150,7 @@ export default function AuthModal({ isOpen, onSelectUser, onClose }: AuthModalPr
         setError(res.error || 'Invalid login credentials.');
       }
     } catch {
-      setError('Failed to connect to backend server. Make sure port 8000 is active.');
+      setError('Failed to connect to backend. Make sure port 8000 is active.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +167,6 @@ export default function AuthModal({ isOpen, onSelectUser, onClose }: AuthModalPr
       setError('Username must be at least 3 characters long.');
       return;
     }
-
     setLoading(true);
     try {
       const res = await registerUser(username.trim(), password);
@@ -82,226 +186,263 @@ export default function AuthModal({ isOpen, onSelectUser, onClose }: AuthModalPr
     onSelectUser({ username: 'guest', isGuest: true });
   };
 
+  // Shared motion variants
+  const slideVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+  };
+
+  const tabDirection = activeTab === 'login' ? 1 : activeTab === 'register' ? 2 : 0;
+
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fadeIn">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
-        {/* Header Banner */}
-        <div className="relative bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 p-6 text-white text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md shadow-inner mb-3">
-            <Sparkles size={24} className="text-sky-200" />
-          </div>
-          <h2 className="text-xl font-extrabold tracking-tight">MemoryVault AI</h2>
-          <p className="text-xs text-sky-100 mt-1">Context-Aware Misplaced Item Prediction</p>
+    <div className="auth-overlay">
+      <FloatingOrbs />
+      <motion.div
+        className="auth-card"
+        initial={{ opacity: 0, y: 40, scale: 0.92 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{ rotateX, rotateY, perspective: 1200 }}
+        onMouseMove={handleMouseMove}
+      >
+        {/* Glowing top border */}
+        <div className="auth-card-glow" />
+
+        {/* Brand Header */}
+        <div className="auth-brand">
+          <motion.div
+            className="auth-brand-icon"
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <Brain size={28} color="#fff" />
+          </motion.div>
+          <h1 className="auth-brand-title">MemoryVault AI</h1>
+          <p className="auth-brand-sub">Context-Aware Misplaced Item Prediction</p>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6">
+        {/* Tab Pills (only on login/register views) */}
+        {activeTab !== 'welcome' && (
+          <div className="auth-tab-bar">
+            <button
+              type="button"
+              className={cn('auth-tab', activeTab === 'login' && 'auth-tab--active')}
+              onClick={() => setActiveTab('login')}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              className={cn('auth-tab', activeTab === 'register' && 'auth-tab--active')}
+              onClick={() => setActiveTab('register')}
+            >
+              Register
+            </button>
+          </div>
+        )}
+
+        {/* Error Message */}
+        <AnimatePresence mode="wait">
           {error && (
-            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
-              ⚠️ {error}
-            </div>
+            <motion.div
+              key="error"
+              className="auth-error"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <span>⚠️ {error}</span>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* TAB 1: WELCOME SCREEN */}
-          {activeTab === 'welcome' && (
-            <div className="flex flex-col gap-4 text-center">
-              <div className="text-sm text-slate-300">
-                Welcome! Choose how you would like to proceed with your item search:
-              </div>
+        {/* Body — Animated Tab Panels */}
+        <div className="auth-body">
+          <AnimatePresence mode="wait" custom={tabDirection}>
+            {/* ── WELCOME ──────────────────────────── */}
+            {activeTab === 'welcome' && (
+              <motion.div
+                key="welcome"
+                custom={0}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="auth-panel"
+              >
+                <p className="auth-welcome-text">
+                  Welcome! Choose how you would like to start your search session.
+                </p>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setError(null);
-                    setActiveTab('login');
-                  }}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-sky-600 py-3 text-sm font-bold text-white shadow-lg shadow-sky-600/30 hover:bg-sky-500 transition-all"
+                  onClick={() => setActiveTab('login')}
+                  className="auth-primary-btn"
                 >
-                  <LogIn size={16} />
-                  Login to Account
+                  <User size={16} />
+                  Sign In to Account
+                  <ArrowRight size={16} className="auth-btn-arrow" />
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setError(null);
-                    setActiveTab('register');
-                  }}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 py-3 text-sm font-bold text-slate-200 hover:bg-slate-700 transition-all"
+                  onClick={() => setActiveTab('register')}
+                  className="auth-secondary-btn"
                 >
                   <UserPlus size={16} />
-                  Register New Account
+                  Create New Account
                 </button>
 
-                <div className="relative my-1 flex items-center justify-center">
-                  <div className="w-full border-t border-slate-800" />
-                  <span className="absolute bg-slate-900 px-3 text-[10px] uppercase font-semibold text-slate-500">
-                    OR
-                  </span>
+                <div className="auth-divider">
+                  <span>or</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleGuest}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-700/60 bg-slate-800/40 py-3 text-sm font-semibold text-sky-400 hover:bg-slate-800 hover:text-sky-300 transition-all"
+                  className="auth-guest-btn"
                 >
-                  <span>Continue as Guest (No Login Required)</span>
-                  <ArrowRight size={16} />
+                  <Sparkles size={15} />
+                  Continue as Guest
+                  <ArrowRight size={15} />
                 </button>
-              </div>
 
-              <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-                <ShieldCheck size={13} className="text-emerald-400" />
-                <span>Guest sessions work instantly. Logged in users get saved habit locations!</span>
-              </div>
-            </div>
-          )}
+                <div className="auth-hint">
+                  <ShieldCheck size={13} className="auth-hint-icon" />
+                  <span>Guest sessions work instantly. Logged-in users get saved habit locations!</span>
+                </div>
+              </motion.div>
+            )}
 
-          {/* TAB 2: LOGIN FORM */}
-          {activeTab === 'login' && (
-            <form onSubmit={handleLogin} className="flex flex-col gap-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <LogIn size={18} className="text-sky-400" />
-                Login to MemoryVault
-              </h3>
-
-              <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs font-semibold text-slate-400">Username</label>
-                <div className="relative">
-                  <User size={15} className="absolute left-3 top-3 text-slate-500" />
-                  <input
-                    type="text"
-                    required
+            {/* ── LOGIN FORM ──────────────────────────── */}
+            {activeTab === 'login' && (
+              <motion.div
+                key="login"
+                custom={1}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="auth-panel"
+              >
+                <form onSubmit={handleLogin} className="auth-form">
+                  <AnimatedInput
+                    icon={User}
+                    label="Username"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={setUsername}
                     placeholder="Enter your username"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 pl-9 pr-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
                   />
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs font-semibold text-slate-400">Password</label>
-                <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-3 text-slate-500" />
-                  <input
-                    type="password"
-                    required
+                  <AnimatedInput
+                    icon={Lock}
+                    label="Password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={setPassword}
                     placeholder="Enter your password"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 pl-9 pr-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+                    showToggle
+                    onToggle={() => setShowPassword(!showPassword)}
+                    isVisible={showPassword}
                   />
-                </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 rounded-xl bg-sky-600 py-2.5 text-sm font-bold text-white shadow-lg shadow-sky-600/30 hover:bg-sky-500 disabled:opacity-50 transition-all"
+                  <motion.button
+                    type="submit"
+                    disabled={loading}
+                    className="auth-submit-btn"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {loading ? (
+                      <div className="auth-spinner" />
+                    ) : (
+                      <>
+                        Sign In
+                        <ArrowRight size={16} />
+                      </>
+                    )}
+                  </motion.button>
+
+                  <div className="auth-footer-links">
+                    <button type="button" onClick={() => setActiveTab('welcome')} className="auth-link">
+                      ← Back
+                    </button>
+                    <button type="button" onClick={handleGuest} className="auth-link auth-link--accent">
+                      Skip — Continue as Guest →
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+
+            {/* ── REGISTER FORM ──────────────────────────── */}
+            {activeTab === 'register' && (
+              <motion.div
+                key="register"
+                custom={2}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="auth-panel"
               >
-                {loading ? 'Authenticating...' : 'Sign In'}
-              </button>
-
-              <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setActiveTab('welcome');
-                  }}
-                  className="hover:underline text-slate-400"
-                >
-                  ← Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setActiveTab('register');
-                  }}
-                  className="text-sky-400 hover:underline"
-                >
-                  Need an account? Register
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* TAB 3: REGISTER FORM */}
-          {activeTab === 'register' && (
-            <form onSubmit={handleRegister} className="flex flex-col gap-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <UserPlus size={18} className="text-sky-400" />
-                Register Unique Account
-              </h3>
-
-              <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs font-semibold text-slate-400">Choose Username (Unique)</label>
-                <div className="relative">
-                  <User size={15} className="absolute left-3 top-3 text-slate-500" />
-                  <input
-                    type="text"
-                    required
+                <form onSubmit={handleRegister} className="auth-form">
+                  <AnimatedInput
+                    icon={User}
+                    label="Choose Username (Unique)"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Choose a unique username"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 pl-9 pr-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+                    onChange={setUsername}
+                    placeholder="Pick a unique username"
                   />
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs font-semibold text-slate-400">Password</label>
-                <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-3 text-slate-500" />
-                  <input
-                    type="password"
-                    required
+                  <AnimatedInput
+                    icon={Lock}
+                    label="Create Password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 pl-9 pr-3 text-sm text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+                    onChange={setPassword}
+                    placeholder="Create a strong password"
+                    showToggle
+                    onToggle={() => setShowPassword(!showPassword)}
+                    isVisible={showPassword}
                   />
-                </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 py-2.5 text-sm font-bold text-white shadow-lg hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50 transition-all"
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
+                  <motion.button
+                    type="submit"
+                    disabled={loading}
+                    className="auth-submit-btn auth-submit-btn--register"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {loading ? (
+                      <div className="auth-spinner" />
+                    ) : (
+                      <>
+                        Create Account
+                        <ArrowRight size={16} />
+                      </>
+                    )}
+                  </motion.button>
 
-              <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setActiveTab('welcome');
-                  }}
-                  className="hover:underline text-slate-400"
-                >
-                  ← Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setActiveTab('login');
-                  }}
-                  className="text-sky-400 hover:underline"
-                >
-                  Already registered? Sign In
-                </button>
-              </div>
-            </form>
-          )}
+                  <div className="auth-footer-links">
+                    <button type="button" onClick={() => setActiveTab('welcome')} className="auth-link">
+                      ← Back
+                    </button>
+                    <button type="button" onClick={handleGuest} className="auth-link auth-link--accent">
+                      Skip — Continue as Guest →
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

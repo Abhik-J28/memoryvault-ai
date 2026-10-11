@@ -38,6 +38,8 @@ export interface ChatResponse {
   layout?: LayoutData | null;
   prediction?: PredictionData | null;
   custom_user_rooms?: string[];
+  repeated_finding_rooms?: string[];
+  finding_counts?: Record<string, number>;
 }
 
 export interface AuthUser {
@@ -57,6 +59,8 @@ export interface CustomLocation {
   item_type: string;
   room: string;
   notes?: string;
+  entry_count?: number;
+  is_manual?: number;
   created_at?: string;
 }
 
@@ -217,6 +221,7 @@ export async function sendFeedback(
   itemType: string,
   foundLocation: string,
   context: Record<string, unknown>,
+  username?: string | null,
 ): Promise<void> {
   await fetch(`${BACKEND_URL}/api/v1/feedback`, {
     method: 'POST',
@@ -226,9 +231,11 @@ export async function sendFeedback(
       item_type: itemType,
       found_location: foundLocation,
       context,
+      username: username || null,
     }),
   });
 }
+
 
 /**
  * Fetch ML model performance metrics.

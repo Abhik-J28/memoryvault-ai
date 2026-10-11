@@ -62,6 +62,8 @@ class ChatResponse(BaseModel):
     layout: Optional[dict[str, Any]] = None
     prediction: Optional[dict[str, Any]] = None
     custom_user_rooms: list[str] = Field(default_factory=list, description="User-pinned custom habit rooms for pink map highlights")
+    repeated_finding_rooms: list[str] = Field(default_factory=list, description="Empirical repeated finding rooms for orange map highlights")
+    finding_counts: dict[str, int] = Field(default_factory=dict, description="Finding frequency per room for badge counts")
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +106,11 @@ class FeedbackRequest(BaseModel):
     item_type: str
     found_location: str
     context: dict[str, Any] = Field(default_factory=dict)
+    username: Optional[str] = Field(
+        default=None,
+        description="Logged-in username if authenticated; guests are excluded",
+    )
+
 
 
 # ---------------------------------------------------------------------------

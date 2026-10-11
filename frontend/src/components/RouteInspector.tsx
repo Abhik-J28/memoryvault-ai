@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MapPin,
   Navigation,
@@ -38,9 +38,15 @@ interface RouteInspectorProps {
   prediction: PredictionData | null;
   sessionId: string;
   context: Record<string, unknown>;
+  itemType?: string;
+  username?: string | null;
   customUserRooms?: string[];
+  repeatedFindingRooms?: string[];
+  findingCounts?: Record<string, number>;
   onResetSearch?: () => void;
+  onItemFound?: (room: string) => void;
 }
+
 
 // ---------------------------------------------------------------------------
 // Architectural Room Boundary Boxes (Blueprint Zones)
@@ -66,12 +72,16 @@ function FloorPlanSVG({
   routeData,
   highlightedRoom,
   customUserRooms = [],
+  repeatedFindingRooms = [],
+  findingCounts = {},
   isFullscreen = false,
 }: {
   layout: LayoutData;
   routeData: RouteStep[] | null;
   highlightedRoom: string | null;
   customUserRooms?: string[];
+  repeatedFindingRooms?: string[];
+  findingCounts?: Record<string, number>;
   isFullscreen?: boolean;
 }) {
   const { rooms, edges } = layout;
@@ -159,7 +169,20 @@ function FloorPlanSVG({
           <stop offset="100%" stopColor="#ec4899" />
         </linearGradient>
 
+        <linearGradient id="room-orange-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#c2410c" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+
         <filter id="pink-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="6" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <filter id="orange-glow" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="6" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
@@ -348,6 +371,9 @@ function FloorPlanSVG({
         const isHighlighted = highlightedRoom === key;
         const isInRoute = routeData?.some((s) => s.room === key);
         const isUserSaved = customUserRooms.includes(key);
+        const isRepeatedFinding = repeatedFindingRooms.includes(key);
+        const foundCount = findingCounts[key] || 1;
+        const isTopHabit = isUserSaved && customUserRooms[0] === key;
         const prob = routeData?.find((s) => s.room === key)?.probability;
         const rank = getRoomRank(key);
 
@@ -355,10 +381,14 @@ function FloorPlanSVG({
         let strokeColor = '#475569';
         let strokeW = 2;
 
-        if (isUserSaved) {
+        if (isRepeatedFinding) {
+          gradFill = 'url(#room-orange-grad)';
+          strokeColor = '#f97316';
+          strokeW = 4;
+        } else if (isUserSaved) {
           gradFill = 'url(#room-pink-grad)';
-          strokeColor = '#f472b6';
-          strokeW = 3.5;
+          strokeColor = isTopHabit ? '#ec4899' : '#f472b6';
+          strokeW = isTopHabit ? 4.5 : 3.5;
         } else if (isHighlighted) {
           gradFill = 'url(#room-active-grad)';
           strokeColor = '#38bdf8';
@@ -371,25 +401,42 @@ function FloorPlanSVG({
 
         return (
           <g key={`room-node-${key}`} filter="url(#node-shadow)">
-            {/* Pink Glow Pulse Halo for User Saved Locations */}
-            {isUserSaved && (
+            {/* Orange Glow Pulse Halo for Repeated Findings */}
+            {isRepeatedFinding && (
               <circle
                 cx={room.x}
                 cy={room.y}
-                r="46"
+                r="48"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="3.5"
+                opacity="0.85"
+                filter="url(#orange-glow)"
+              >
+                <animate attributeName="r" values="38;54;38" dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.95;0.25;0.95" dur="1.8s" repeatCount="indefinite" />
+              </circle>
+            )}
+
+            {/* Pink Glow Pulse Halo for User Saved Locations */}
+            {isUserSaved && !isRepeatedFinding && (
+              <circle
+                cx={room.x}
+                cy={room.y}
+                r={isTopHabit ? "52" : "46"}
                 fill="none"
                 stroke="#ec4899"
-                strokeWidth="3"
+                strokeWidth={isTopHabit ? "4" : "3"}
                 opacity="0.8"
                 filter="url(#pink-glow)"
               >
-                <animate attributeName="r" values="36;52;36" dur="2s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.9;0.3;0.9" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="r" values={isTopHabit ? "40;58;40" : "36;52;36"} dur="1.8s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.95;0.25;0.95" dur="1.8s" repeatCount="indefinite" />
               </circle>
             )}
 
             {/* Animated Pulse Halo for Highlighted / Rank 1 */}
-            {!isUserSaved && (isHighlighted || rank === 1) && (
+            {!isUserSaved && !isRepeatedFinding && (isHighlighted || rank === 1) && (
               <circle
                 cx={room.x}
                 cy={room.y}
@@ -474,16 +521,16 @@ function FloorPlanSVG({
                 width="130"
                 height="22"
                 rx="11"
-                fill={isUserSaved ? '#831843' : '#0f172a'}
+                fill={isRepeatedFinding ? '#7c2d12' : isUserSaved ? '#831843' : '#0f172a'}
                 fillOpacity="0.95"
-                stroke={isUserSaved ? '#ec4899' : isHighlighted ? '#38bdf8' : isInRoute ? '#059669' : '#334155'}
-                strokeWidth={isUserSaved ? 2 : 1.5}
+                stroke={isRepeatedFinding ? '#f97316' : isUserSaved ? '#ec4899' : isHighlighted ? '#38bdf8' : isInRoute ? '#059669' : '#334155'}
+                strokeWidth={isRepeatedFinding ? 2.5 : isUserSaved ? 2 : 1.5}
               />
               <text
                 x={room.x}
                 y={room.y + 51}
                 textAnchor="middle"
-                fill={isUserSaved ? '#fbcfe8' : isHighlighted ? '#ffffff' : '#f1f5f9'}
+                fill={isRepeatedFinding ? '#ffedd5' : isUserSaved ? '#fbcfe8' : isHighlighted ? '#ffffff' : '#f1f5f9'}
                 fontSize="12"
                 fontWeight="700"
                 fontFamily="system-ui, sans-serif"
@@ -492,18 +539,18 @@ function FloorPlanSVG({
               </text>
             </g>
 
-            {/* User Saved Habit Badge */}
-            {isUserSaved && (
+            {/* Repeated User Finding Badge (Orange) */}
+            {isRepeatedFinding && (
               <g>
                 <rect
-                  x={room.x - 45}
+                  x={room.x - 55}
                   y={room.y - 48}
-                  width="90"
+                  width="110"
                   height="18"
                   rx="9"
-                  fill="#be185d"
-                  stroke="#f472b6"
-                  strokeWidth="1"
+                  fill="#c2410c"
+                  stroke="#fb923c"
+                  strokeWidth="1.5"
                 />
                 <text
                   x={room.x}
@@ -513,7 +560,33 @@ function FloorPlanSVG({
                   fontSize="9"
                   fontWeight="800"
                 >
-                  🌸 User Habit
+                  {`🔥 FOUND (${foundCount}x)`}
+                </text>
+              </g>
+            )}
+
+            {/* User Saved Habit Badge (Pink) */}
+            {isUserSaved && !isRepeatedFinding && (
+              <g>
+                <rect
+                  x={room.x - (isTopHabit ? 50 : 45)}
+                  y={room.y - 48}
+                  width={isTopHabit ? 100 : 90}
+                  height="18"
+                  rx="9"
+                  fill={isTopHabit ? '#9d174d' : '#be185d'}
+                  stroke={isTopHabit ? '#f472b6' : '#f472b6'}
+                  strokeWidth={isTopHabit ? 1.5 : 1}
+                />
+                <text
+                  x={room.x}
+                  y={room.y - 35}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize="9"
+                  fontWeight="800"
+                >
+                  {isTopHabit ? '⭐ TOP HABIT' : '🌸 Habit Spot'}
                 </text>
               </g>
             )}
@@ -560,12 +633,18 @@ function RouteCard({
   step,
   index,
   isHighlighted,
+  isRepeatedFinding = false,
+  findingCount = 1,
+  isUserSaved = false,
   onHover,
   onFoundHere,
 }: {
   step: RouteStep;
   index: number;
   isHighlighted: boolean;
+  isRepeatedFinding?: boolean;
+  findingCount?: number;
+  isUserSaved?: boolean;
   onHover: (room: string | null) => void;
   onFoundHere: (room: string) => void;
 }) {
@@ -578,25 +657,40 @@ function RouteCard({
 
   return (
     <div
-      className={`route-card ${isHighlighted ? 'highlighted' : ''}`}
+      className={`route-card ${isHighlighted ? 'highlighted ring-2 ring-orange-500' : ''} ${
+        isRepeatedFinding ? 'border-orange-500/50 bg-orange-950/20' : ''
+      }`}
       onMouseEnter={() => onHover(step.room)}
       onMouseLeave={() => onHover(null)}
     >
       {/* Step number badge */}
-      <div className="route-card-step" style={{ backgroundColor: confidenceColor }}>
-        #{index + 1}
+      <div
+        className="route-card-step"
+        style={{ backgroundColor: isRepeatedFinding ? '#ea580c' : confidenceColor }}
+      >
+        {isRepeatedFinding ? '🔥' : `#${index + 1}`}
       </div>
 
       {/* Details */}
       <div className="route-card-details">
         <div className="route-card-title">
           <span>{step.label}</span>
-          <span
-            className="route-card-badge"
-            style={{ backgroundColor: confidenceColor + '22', color: confidenceColor }}
-          >
-            {(step.probability * 100).toFixed(1)}% Match
-          </span>
+          {isRepeatedFinding ? (
+            <span className="route-card-badge bg-orange-500/25 text-orange-300 font-bold border border-orange-500/40">
+              🔥 Habit Spot ({findingCount}x)
+            </span>
+          ) : isUserSaved ? (
+            <span className="route-card-badge bg-pink-500/25 text-pink-300 font-bold border border-pink-500/40">
+              🌸 Saved Habit
+            </span>
+          ) : (
+            <span
+              className="route-card-badge"
+              style={{ backgroundColor: confidenceColor + '22', color: confidenceColor }}
+            >
+              {(step.probability * 100).toFixed(1)}% Match
+            </span>
+          )}
         </div>
         <div className="route-card-meta">
           <Navigation size={12} />
@@ -609,7 +703,11 @@ function RouteCard({
       {/* Found Here action button */}
       <button
         type="button"
-        className="found-here-btn"
+        className={`found-here-btn ${
+          isRepeatedFinding
+            ? 'bg-orange-600/30 hover:bg-orange-600 text-orange-200 hover:text-white border border-orange-500/50'
+            : ''
+        }`}
         onClick={() => onFoundHere(step.room)}
         aria-label={`Mark item as found in ${step.label}`}
       >
@@ -630,37 +728,81 @@ export default function RouteInspector({
   prediction,
   sessionId,
   context,
+  itemType,
+  username,
+  customUserRooms = [],
+  repeatedFindingRooms = [],
+  findingCounts = {},
   onResetSearch,
+  onItemFound,
 }: RouteInspectorProps) {
   const [highlightedRoom, setHighlightedRoom] = useState<string | null>(null);
   const [foundRoom, setFoundRoom] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [activeUserRooms, setActiveUserRooms] = useState<string[]>(customUserRooms);
+  const [activeRepeatedRooms, setActiveRepeatedRooms] = useState<string[]>(repeatedFindingRooms);
+  const [activeFindingCounts, setActiveFindingCounts] = useState<Record<string, number>>(findingCounts);
+
+  useEffect(() => {
+    setActiveUserRooms(customUserRooms);
+  }, [customUserRooms]);
+
+  useEffect(() => {
+    setActiveRepeatedRooms(repeatedFindingRooms);
+  }, [repeatedFindingRooms]);
+
+  useEffect(() => {
+    setActiveFindingCounts(findingCounts);
+  }, [findingCounts]);
 
   const handleFoundHere = async (room: string) => {
     setFoundRoom(room);
-    const itemType = (context.item_type as string) || '';
+    const currentItem = itemType || (context.item_type as string) || '';
+    const user = (username || (context.username as string) || '').trim().toLowerCase();
+    const isGuest = !user || user === 'guest';
+
+    // Strictly record & highlight empirical habits for authenticated users (not guest)
+    if (!isGuest) {
+      setActiveRepeatedRooms((prev) => [room, ...prev.filter((r) => r !== room)]);
+      setActiveFindingCounts((prev) => ({
+        ...prev,
+        [room]: (prev[room] || 0) + 1,
+      }));
+      if (onItemFound) {
+        onItemFound(room);
+      }
+    }
+
+    const ctxWithUser = {
+      ...context,
+      username: isGuest ? 'guest' : user,
+      item_type: currentItem,
+    };
     try {
-      await sendFeedback(sessionId, itemType, room, context);
+      await sendFeedback(sessionId, currentItem, room, ctxWithUser, isGuest ? null : user);
     } catch {
       // Graceful error handling
     }
   };
 
-  // ── Empty State ─────────────────────────────────────────────────────
-  if (!routeData || !layout) {
+
+  // ── Empty State (Only if layout failed to load) ──────────────────────
+  if (!layout) {
     return (
       <div className="route-inspector">
-        <div className="route-inspector-header">
-          <MapPin size={18} className="text-sky-500" />
-          <span className="font-bold text-slate-800">Search Route Inspector</span>
+        <div className="route-inspector-header flex items-center justify-between bg-slate-900 border-b border-slate-800 px-4 py-2.5 text-slate-100 font-bold text-xs tracking-wider uppercase">
+          <div className="flex items-center gap-2">
+            <Compass size={16} className="text-sky-400" />
+            <span>Search Route Inspector</span>
+          </div>
           {onResetSearch && (
             <button
               type="button"
-              className="search-another-header-btn"
+              className="search-another-header-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-sky-300 bg-sky-950/60 border border-sky-800/60 hover:bg-sky-600 hover:text-white hover:border-sky-500 transition-all cursor-pointer shadow-sm active:scale-95"
               onClick={onResetSearch}
               title="Start a fresh search for another lost item"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={12} className="shrink-0" />
               <span>New Search</span>
             </button>
           )}
@@ -668,7 +810,7 @@ export default function RouteInspector({
         <div className="route-inspector-empty">
           <Home size={52} color="#334155" />
           <p className="font-semibold text-slate-700 text-base">
-            Complete the conversation to generate your high-clarity floor plan & search route.
+            Loading home blueprint...
           </p>
           <p className="route-inspector-hint">
             MemoryVault AI will calculate habit probability vectors and plot an optimal A* path.
@@ -678,32 +820,49 @@ export default function RouteInspector({
     );
   }
 
+  const currentItemName = (itemType || (context.item_type as string) || '').replace(/_/g, ' ');
+
   // ── Active Route Inspector View ──────────────────────────────────────
   return (
     <>
       <div className="route-inspector">
         {/* Top Header Bar */}
-        <div className="route-inspector-header">
-          <div className="flex items-center gap-2">
-            <Compass size={18} color="#0284c7" />
-            <span className="font-bold">Search Route Inspector</span>
+        <div className="route-inspector-header flex flex-wrap items-center justify-between gap-2.5 bg-slate-900 border-b border-slate-800 px-4 py-2.5 text-slate-100">
+          <div className="flex items-center gap-2 font-bold text-xs tracking-wider uppercase">
+            <Compass size={16} className="text-sky-400 shrink-0" />
+            <span>Search Route Inspector</span>
           </div>
 
-          {prediction && (
-            <span className="route-inspector-confidence">
-              Top Pick: <strong>{prediction.predicted_location.replace(/_/g, ' ')}</strong>
+          {prediction ? (
+            <span className="route-inspector-confidence rounded-lg bg-sky-950/70 border border-sky-800/70 px-2.5 py-1 text-xs text-sky-200 font-medium flex items-center gap-1.5 shadow-inner">
+              <span className="text-slate-400 text-[11px]">Top Pick:</span>
+              <strong className="text-sky-300 capitalize font-bold">
+                {prediction.predicted_location.replace(/_/g, ' ')}
+              </strong>
             </span>
-          )}
+          ) : currentItemName ? (
+            <span className="route-inspector-confidence rounded-lg bg-orange-950/80 border border-orange-800/80 px-2.5 py-1 text-xs text-orange-200 font-medium flex items-center gap-1.5 shadow-inner">
+              <span className="text-orange-400 text-[11px]">Item:</span>
+              <strong className="text-orange-300 capitalize font-bold">
+                {currentItemName}
+              </strong>
+              {activeRepeatedRooms.length > 0 && (
+                <span className="ml-1 text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded-full font-bold">
+                  🔥 {activeRepeatedRooms.length} Habit Spot{activeRepeatedRooms.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </span>
+          ) : null}
 
           <div className="flex items-center gap-2">
             {onResetSearch && (
               <button
                 type="button"
-                className="search-another-header-btn"
+                className="search-another-header-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-sky-300 bg-sky-950/60 border border-sky-800/60 hover:bg-sky-600 hover:text-white hover:border-sky-500 transition-all cursor-pointer shadow-sm active:scale-95"
                 onClick={onResetSearch}
                 title="Search another lost item"
               >
-                <RotateCcw size={14} />
+                <RotateCcw size={12} className="shrink-0" />
                 <span>Search Another</span>
               </button>
             )}
@@ -711,15 +870,32 @@ export default function RouteInspector({
             {/* Expand Fullscreen Button */}
             <button
               type="button"
-              className="floor-plan-expand-btn"
+              className="floor-plan-expand-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-800/60 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all cursor-pointer shadow-sm active:scale-95"
               onClick={() => setIsFullscreen(true)}
               title="Expand Floor Plan (HD Fullscreen View)"
             >
-              <Maximize2 size={15} />
+              <Maximize2 size={12} className="shrink-0" />
               <span>Expand Map</span>
             </button>
           </div>
         </div>
+
+        {/* Proactive Frequent Finding Reminder Banner */}
+        {activeRepeatedRooms.length > 0 && (
+          <div className="m-3 mb-0 flex items-center gap-2.5 rounded-xl border border-orange-500/50 bg-orange-950/60 p-2.5 text-xs text-orange-200 shadow-lg animate-fadeIn">
+            <Sparkles size={16} className="text-orange-400 shrink-0 animate-pulse" />
+            <div className="flex-1">
+              <strong className="text-orange-300 font-bold">Frequent Finding Habit Reminder: </strong>
+              You previously found your <span className="font-bold underline text-white capitalize">{currentItemName || 'item'}</span> at{' '}
+              <span className="font-bold text-orange-200">
+                {activeRepeatedRooms
+                  .map((r) => `${layout.rooms[r]?.label || r.replace(/_/g, ' ')} (${activeFindingCounts[r] || 1}x)`)
+                  .join(', ')}
+              </span>
+              ! Highlighted in <span className="text-orange-400 font-black">Orange 🔥</span> on the map below.
+            </div>
+          </div>
+        )}
 
         {/* Blueprint Floor Plan Container */}
         <div className="floor-plan-container">
@@ -727,7 +903,9 @@ export default function RouteInspector({
             layout={layout}
             routeData={routeData}
             highlightedRoom={highlightedRoom}
-            customUserRooms={customUserRooms}
+            customUserRooms={activeUserRooms}
+            repeatedFindingRooms={activeRepeatedRooms}
+            findingCounts={activeFindingCounts}
           />
 
           {/* Map Legend Bar */}
@@ -749,37 +927,126 @@ export default function RouteInspector({
               <span>Med/Low Prob</span>
             </div>
             <div className="legend-item">
-              <span className="px-1.5 py-0.5 rounded bg-pink-600 text-[10px] font-bold text-white">🌸 User Saved</span>
-              <span className="text-pink-300 font-semibold">User Habit</span>
+              <span className="px-1.5 py-0.5 rounded bg-orange-600 text-[10px] font-bold text-white shadow-sm">🔥 Frequent Spot</span>
+              <span className="text-orange-300 font-semibold">User Finding</span>
+            </div>
+            <div className="legend-item">
+              <span className="px-1.5 py-0.5 rounded bg-pink-600 text-[10px] font-bold text-white shadow-sm">🌸 Saved Habit</span>
+              <span className="text-pink-300 font-semibold">Saved Pin</span>
             </div>
           </div>
         </div>
 
-        {/* Step-by-Step Route Checklist */}
+        {/* Route Cards OR Habit & Finding Checklist */}
         <div className="route-cards-container">
-          <div className="route-cards-title">
-            <ArrowRight size={15} color="#0284c7" />
-            <span>Optimised Search Sequence Checklist</span>
-            <span className="route-step-count">{routeData.length} Stop(s)</span>
-          </div>
+          {routeData && routeData.length > 0 ? (
+            <>
+              <div className="route-cards-title">
+                <ArrowRight size={15} color="#0284c7" />
+                <span>Optimised Search Sequence Checklist</span>
+                <span className="route-step-count">{routeData.length} Stop(s)</span>
+              </div>
 
-          {routeData.map((step, i) => (
-            <RouteCard
-              key={step.room}
-              step={step}
-              index={i}
-              isHighlighted={highlightedRoom === step.room || foundRoom === step.room}
-              onHover={setHighlightedRoom}
-              onFoundHere={handleFoundHere}
-            />
-          ))}
+              {routeData.map((step, i) => (
+                <RouteCard
+                  key={step.room}
+                  step={step}
+                  index={i}
+                  isHighlighted={highlightedRoom === step.room || foundRoom === step.room}
+                  isRepeatedFinding={activeRepeatedRooms.includes(step.room)}
+                  findingCount={activeFindingCounts[step.room] || 1}
+                  isUserSaved={activeUserRooms.includes(step.room)}
+                  onHover={setHighlightedRoom}
+                  onFoundHere={handleFoundHere}
+                />
+              ))}
+
+            </>
+          ) : (
+            <>
+              <div className="route-cards-title flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles size={15} color="#f97316" />
+                  <span>
+                    {activeRepeatedRooms.length > 0
+                      ? `Previous Finding Habits for ${currentItemName ? currentItemName.toUpperCase() : 'Item'}`
+                      : activeUserRooms.length > 0
+                      ? 'Saved Habit Locations'
+                      : 'Home Blueprint Loaded'}
+                  </span>
+                </div>
+                <span className="route-step-count bg-slate-800 text-slate-300 text-[11px] px-2 py-0.5 rounded-md font-bold">
+                  {activeRepeatedRooms.length > 0
+                    ? `${activeRepeatedRooms.length} Habit Spot(s)`
+                    : 'Awaiting Route'}
+                </span>
+              </div>
+
+              {activeRepeatedRooms.length > 0 ? (
+                <div className="space-y-2 mt-2">
+                  {activeRepeatedRooms.map((roomKey) => {
+                    const roomInfo = layout.rooms[roomKey];
+                    const count = activeFindingCounts[roomKey] || 1;
+                    const isFound = foundRoom === roomKey;
+                    return (
+                      <div
+                        key={roomKey}
+                        className={`route-card border-orange-500/40 bg-orange-950/20 hover:bg-orange-950/30 ${
+                          highlightedRoom === roomKey || isFound ? 'highlighted ring-2 ring-orange-500' : ''
+                        }`}
+                        onMouseEnter={() => setHighlightedRoom(roomKey)}
+                        onMouseLeave={() => setHighlightedRoom(null)}
+                      >
+                        <div className="route-card-step bg-orange-600 font-black">
+                          🔥
+                        </div>
+                        <div className="route-card-details">
+                          <div className="route-card-title">
+                            <span className="font-bold text-slate-100">
+                              {roomInfo?.label || roomKey.replace(/_/g, ' ')}
+                            </span>
+                            <span className="route-card-badge bg-orange-500/20 text-orange-300 font-bold border border-orange-500/30">
+                              Found {count}x previously
+                            </span>
+                          </div>
+                          <div className="route-card-meta text-slate-400">
+                            <span>Frequent Spot Habit Reminder for {currentItemName || 'item'}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="found-here-btn bg-orange-600/30 hover:bg-orange-600 text-orange-200 hover:text-white border border-orange-500/50"
+                          onClick={() => handleFoundHere(roomKey)}
+                          aria-label={`Mark item as found in ${roomInfo?.label || roomKey}`}
+                        >
+                          <CheckCircle2 size={14} />
+                          Found Here
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-4 text-center text-xs text-slate-400 bg-slate-900/40 rounded-xl border border-slate-800 my-2">
+                  <p className="font-semibold text-slate-300">
+                    {currentItemName
+                      ? `Searching for your ${currentItemName}...`
+                      : 'Select or type a misplaced item in the chat'}
+                  </p>
+                  <p className="mt-1 text-slate-400">
+                    Your previous habit spots will automatically light up here in Orange, and AI will calculate the optimal search route!
+                  </p>
+                </div>
+              )}
+            </>
+          )}
 
           {foundRoom && (
-            <div className="found-confirmation flex-col items-stretch gap-3">
+            <div className="found-confirmation flex-col items-stretch gap-3 mt-3">
               <div className="flex items-center gap-2">
                 <Sparkles size={18} color="#059669" />
                 <span>
-                  Item recorded as found in <strong>{foundRoom.replace(/_/g, ' ')}</strong>! Model weights updated.
+                  Item recorded as found in <strong>{foundRoom.replace(/_/g, ' ')}</strong>! Saved to frequent habits database.
                 </span>
               </div>
               {onResetSearch && (
@@ -826,7 +1093,9 @@ export default function RouteInspector({
                 layout={layout}
                 routeData={routeData}
                 highlightedRoom={highlightedRoom}
-                customUserRooms={customUserRooms}
+                customUserRooms={activeUserRooms}
+                repeatedFindingRooms={activeRepeatedRooms}
+                findingCounts={activeFindingCounts}
                 isFullscreen={true}
               />
             </div>

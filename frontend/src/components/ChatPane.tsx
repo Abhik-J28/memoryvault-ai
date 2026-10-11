@@ -30,7 +30,22 @@ interface Message {
 interface ChatPaneProps {
   sessionId: string;
   username?: string | null;
-  onRouteData: (route: RouteStep[], layout: LayoutData, prediction: PredictionData, customUserRooms?: string[]) => void;
+  onRouteData: (
+    route: RouteStep[],
+    layout: LayoutData,
+    prediction: PredictionData,
+    customUserRooms?: string[],
+    repeatedFindingRooms?: string[],
+    findingCounts?: Record<string, number>,
+    context?: Record<string, unknown>,
+  ) => void;
+  onEarlyFindings?: (
+    layout: LayoutData | null,
+    repeatedFindingRooms: string[],
+    findingCounts: Record<string, number>,
+    customUserRooms?: string[],
+    itemType?: string,
+  ) => void;
   onResetSearch?: () => void;
 }
 
@@ -38,13 +53,17 @@ interface ChatPaneProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function ChatPane({ sessionId, username, onRouteData, onResetSearch }: ChatPaneProps) {
+export default function ChatPane({ sessionId, username, onRouteData, onEarlyFindings, onResetSearch }: ChatPaneProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [dialogueState, setDialogueState] = useState('GREETING');
-  const [context, setContext] = useState<Record<string, unknown>>({});
   const [chipDisabled, setChipDisabled] = useState(false);
+
+  // Use refs for dialogue state & context to break the re-render dependency cycle
+  // that was causing "Maximum update depth exceeded" errors
+  const dialogueStateRef = useRef('GREETING');
+  const contextRef = useRef<Record<string, unknown>>({});
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasInitiated = useRef(false);
@@ -56,14 +75,6 @@ export default function ChatPane({ sessionId, username, onRouteData, onResetSear
       behavior: 'smooth',
     });
   }, [messages, isTyping]);
-
-  // Initiate conversation on mount
-  useEffect(() => {
-    if (hasInitiated.current) return;
-    hasInitiated.current = true;
-    handleSend('', true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleSend = useCallback(
     async (text: string, isInit = false) => {
@@ -89,13 +100,14 @@ export default function ChatPane({ sessionId, username, onRouteData, onResetSear
         const response: ChatResponse = await sendChatMessage(
           sessionId,
           isInit ? '' : text.trim(),
-          dialogueState,
-          context,
+          dialogueStateRef.current,
+          contextRef.current,
           username,
         );
 
-        setDialogueState(response.state);
-        setContext(response.context);
+        // Update refs (no re-render, no dependency loop)
+        dialogueStateRef.current = response.state;
+        contextRef.current = response.context;
 
         const botMsg: Message = {
           id: `bot-${Date.now()}`,
@@ -109,7 +121,27 @@ export default function ChatPane({ sessionId, username, onRouteData, onResetSear
 
         // If route data is available, send to parent
         if (response.route_data && response.layout && response.prediction) {
-          onRouteData(response.route_data, response.layout, response.prediction, response.custom_user_rooms);
+          onRouteData(
+            response.route_data,
+            response.layout,
+            response.prediction,
+            response.custom_user_rooms,
+            response.repeated_finding_rooms,
+            response.finding_counts,
+            response.context,
+          );
+        } else if (
+          onEarlyFindings &&
+          (response.repeated_finding_rooms || response.custom_user_rooms || response.layout)
+        ) {
+          // Proactive habit reminder: bubble up layout, previous findings & habit pins as soon as item is identified
+          onEarlyFindings(
+            response.layout || null,
+            response.repeated_finding_rooms || [],
+            response.finding_counts || {},
+            response.custom_user_rooms || [],
+            (response.context?.item_type as string) || undefined,
+          );
         }
       } catch {
         const errorMsg: Message = {
@@ -123,8 +155,15 @@ export default function ChatPane({ sessionId, username, onRouteData, onResetSear
         inputRef.current?.focus();
       }
     },
-    [sessionId, username, dialogueState, context, onRouteData],
+    [sessionId, username, onRouteData, onEarlyFindings],
   );
+
+  // Initiate conversation on mount
+  useEffect(() => {
+    if (hasInitiated.current) return;
+    hasInitiated.current = true;
+    handleSend('', true);
+  }, [handleSend]);
 
   const handleChipSelect = (chip: string) => {
     if (chipDisabled) return;
@@ -143,19 +182,19 @@ export default function ChatPane({ sessionId, username, onRouteData, onResetSear
   return (
     <div className="chat-pane">
       {/* Header */}
-      <div className="chat-header justify-between">
+      <div className="chat-header justify-between bg-slate-900 border-b border-slate-800 px-4 py-2.5 text-slate-100 font-bold text-xs tracking-wider uppercase flex items-center">
         <div className="flex items-center gap-2">
-          <Brain size={18} color="#0284c7" />
+          <Brain size={16} className="text-sky-400" />
           <span>Conversational Triage</span>
         </div>
         {onResetSearch && (
           <button
             type="button"
-            className="search-another-header-btn"
+            className="search-another-header-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-sky-300 bg-sky-950/60 border border-sky-800/60 hover:bg-sky-600 hover:text-white hover:border-sky-500 transition-all cursor-pointer shadow-sm active:scale-95"
             onClick={onResetSearch}
             title="Start a fresh search for another lost item"
           >
-            <RotateCcw size={13} />
+            <RotateCcw size={12} className="shrink-0" />
             <span>Search Another</span>
           </button>
         )}
