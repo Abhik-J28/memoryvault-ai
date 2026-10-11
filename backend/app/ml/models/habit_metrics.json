@@ -1,0 +1,9 @@
+{
+  "n_clusters": 3,
+  "silhouette_score": 0.3491,
+  "explained_variance_ratio": [
+    0.1709,
+    0.169
+  ],
+  "inertia": 4384.49
+}
