@@ -38,46 +38,67 @@ from app.db_local import get_custom_locations, get_item_findings
 # ---------------------------------------------------------------------------
 
 _ITEM_ALIASES: dict[str, str] = {
+    # keys
     "key": "keys",
     "keys": "keys",
+    "house key": "keys",
+    "house keys": "keys",
+    "car key": "keys",
+    # wallet
     "wallet": "wallet",
     "purse": "wallet",
-    "phone": "phone",
-    "mobile": "phone",
-    "cell": "phone",
+    "billfold": "wallet",
+    "money clip": "wallet",
+    # spectacles
     "spectacles": "spectacles",
     "glasses": "spectacles",
     "specs": "spectacles",
+    "eyeglasses": "spectacles",
+    "sunglasses": "spectacles",
+    # earphones
     "earphones": "earphones",
     "headphones": "earphones",
     "earbuds": "earphones",
     "airpods": "earphones",
+    "earpods": "earphones",
+    # backpack
     "backpack": "backpack",
     "bag": "backpack",
-    "water bottle": "water_bottle",
-    "water_bottle": "water_bottle",
-    "bottle": "water_bottle",
-    "charger": "charger",
-    "charging cable": "charger",
-    "cable": "charger",
+    "rucksack": "backpack",
+    "satchel": "backpack",
+    "knapsack": "backpack",
 }
 
 _VALID_ITEMS = list(set(_ITEM_ALIASES.values()))
 
+# Dataset weather conditions: clear, rain, extreme_heat, snow
 _WEATHER_ALIASES: dict[str, str] = {
-    "sunny": "sunny",
-    "clear": "sunny",
-    "hot": "sunny",
-    "rainy": "rainy",
-    "rain": "rainy",
-    "raining": "rainy",
-    "wet": "rainy",
-    "cold": "cold",
-    "chilly": "cold",
-    "winter": "cold",
-    "humid": "humid",
-    "muggy": "humid",
-    "sticky": "humid",
+    "clear": "clear",
+    "sunny": "clear",
+    "bright": "clear",
+    "fair": "clear",
+    "fine": "clear",
+    "hot": "extreme_heat",
+    "extreme heat": "extreme_heat",
+    "extreme_heat": "extreme_heat",
+    "scorching": "extreme_heat",
+    "blazing": "extreme_heat",
+    "heatwave": "extreme_heat",
+    "very hot": "extreme_heat",
+    "rain": "rain",
+    "rainy": "rain",
+    "raining": "rain",
+    "wet": "rain",
+    "drizzle": "rain",
+    "shower": "rain",
+    "stormy": "rain",
+    "snow": "snow",
+    "snowy": "snow",
+    "snowing": "snow",
+    "cold": "snow",
+    "chilly": "snow",
+    "freezing": "snow",
+    "winter": "snow",
 }
 
 # ---------------------------------------------------------------------------
@@ -91,9 +112,9 @@ _GREETING_MESSAGES = [
 
 _ITEM_CONFIRM = "Got it — you're looking for your **{item}**. Let me ask a couple of quick questions to narrow things down."
 
-_Q1_TIME = "🕐 **Question 1 of 2**: Around what time did you last have it?\n\nYou can type a time (e.g., \"7 PM\", \"14:30\") or pick one of these:"
+_Q1_TIME = "🕐 **Question 1 of 2**: Around what time of day do you usually place this item?\n\nYou can type a time (e.g., \"7 PM\", \"14:30\") or pick one of these:"
 
-_Q2_CONTEXT = "🌤️ **Question 2 of 2**: A few more details to help me predict the location:"
+_Q2_CONTEXT = "🌤️ **Question 2 of 2**: A couple more details about your situation:"
 
 _RESULT_INTRO = (
     "🎯 Based on your habits and context, here are the most likely places your **{item}** could be.\n\n"
@@ -105,6 +126,7 @@ _FEEDBACK_ASK = "\n\nDid you find it? Click **\"Found Here\"** on the route card
 _SESSION_COMPLETE = "✅ Great — glad you found your **{item}** in the **{location}**! I've logged this session to improve future predictions. 🧠"
 
 _SESSION_NOT_FOUND = "😔 Sorry we couldn't locate it this time. I've noted this session. Try checking less common spots, and I'll keep learning from your feedback!"
+
 
 
 # ---------------------------------------------------------------------------
@@ -132,18 +154,26 @@ def _parse_time(text: str) -> tuple[float | None, bool]:
             return None, True
 
     chip_map = {
+        # Dataset-aligned time ranges (matching training data distribution)
+        "early morning (0-6)": 3.0,
+        "morning (6-9)": 7.5,
+        "midday (9-14)": 11.5,
+        "afternoon (14-18)": 16.0,
+        "evening (18-21)": 19.5,
+        "night (21-24)": 22.5,
+        # Legacy chips for backward compatibility
         "morning (6-9 am)": 7.5,
         "morning": 7.5,
         "midday (11-2 pm)": 12.5,
-        "midday": 12.5,
+        "midday": 11.5,
         "noon": 12.0,
         "afternoon (2-5 pm)": 15.5,
-        "afternoon": 15.5,
+        "afternoon": 16.0,
         "evening (5-9 pm)": 19.0,
-        "evening": 19.0,
+        "evening": 19.5,
         "late night (9 pm+)": 22.0,
         "late night": 22.0,
-        "night": 21.0,
+        "night": 22.5,
         "midnight": 0.0,
     }
     for chip, val in chip_map.items():
@@ -198,7 +228,7 @@ def process_turn(
         return {
             "session_id": session_id,
             "bot_message": random.choice(_GREETING_MESSAGES),
-            "quick_replies": ["Keys", "Wallet", "Phone", "Spectacles", "Earphones", "Backpack", "Water Bottle", "Charger"],
+            "quick_replies": ["Keys", "Wallet", "Spectacles", "Earphones", "Backpack"],
             "state": "ITEM_COLLECT",
             "context": context,
         }
@@ -216,7 +246,7 @@ def process_turn(
             return {
                 "session_id": session_id,
                 "bot_message": "🤔 I didn't quite catch that. Could you tell me which item you've misplaced?\n\nChoose from the options below or type the item name:",
-                "quick_replies": ["Keys", "Wallet", "Phone", "Spectacles", "Earphones", "Backpack", "Water Bottle", "Charger"],
+                "quick_replies": ["Keys", "Wallet", "Spectacles", "Earphones", "Backpack"],
                 "state": "ITEM_COLLECT",
                 "context": context,
             }
@@ -279,7 +309,7 @@ def process_turn(
         return {
             "session_id": session_id,
             "bot_message": _ITEM_CONFIRM.format(item=item.replace("_", " ")) + reminder_text + "\n\n" + _Q1_TIME,
-            "quick_replies": ["Morning (6-9 AM)", "Midday (11-2 PM)", "Afternoon (2-5 PM)", "Evening (5-9 PM)", "Late Night (9 PM+)", "Not sure"],
+            "quick_replies": ["Early Morning (0-6)", "Morning (6-9)", "Midday (9-14)", "Afternoon (14-18)", "Evening (18-21)", "Night (21-24)", "Not sure"],
             "state": "CONTEXT_Q1",
             "context": context,
             "layout": home_layout,
@@ -299,7 +329,7 @@ def process_turn(
                 return {
                     "session_id": session_id,
                     "bot_message": f"We're currently searching for your **{curr_item_display}**! ⏱️ Could you let me know approximately what time you last had it?\n\nYou can pick one of the options below or type 'Not sure':",
-                    "quick_replies": ["Morning (6-9 AM)", "Midday (11-2 PM)", "Afternoon (2-5 PM)", "Evening (5-9 PM)", "Late Night (9 PM+)", "Not sure"],
+                    "quick_replies": ["Early Morning (0-6)", "Morning (6-9)", "Midday (9-14)", "Afternoon (14-18)", "Evening (18-21)", "Night (21-24)", "Not sure"],
                     "state": "CONTEXT_Q1",
                     "context": context,
                     "layout": get_layout(),
@@ -313,7 +343,7 @@ def process_turn(
             return {
                 "session_id": session_id,
                 "bot_message": f"🤔 I didn't recognize a time from that. Around what time did you last have your **{curr_item_display}**?\n\nYou can type a time (e.g. \"7 PM\", \"14:30\") or pick one of these options:",
-                "quick_replies": ["Morning (6-9 AM)", "Midday (11-2 PM)", "Afternoon (2-5 PM)", "Evening (5-9 PM)", "Late Night (9 PM+)", "Not sure"],
+                "quick_replies": ["Early Morning (0-6)", "Morning (6-9)", "Midday (9-14)", "Afternoon (14-18)", "Evening (18-21)", "Night (21-24)", "Not sure"],
                 "state": "CONTEXT_Q1",
                 "context": context,
                 "layout": get_layout(),
@@ -333,12 +363,13 @@ def process_turn(
             "session_id": session_id,
             "bot_message": _Q2_CONTEXT,
             "quick_replies": [
-                "Sunny & carrying bag & tired",
-                "Sunny & no bag & fresh",
-                "Rainy & carrying bag & tired",
-                "Rainy & no bag & fresh",
-                "Cold & carrying bag & moderate",
-                "Humid & no bag & moderate",
+                "Clear & with bag & very tired (5)",
+                "Clear & no bag & fresh (1)",
+                "Rain & with bag & tired (4)",
+                "Rain & no bag & moderate (3)",
+                "Extreme heat & with bag & very tired (5)",
+                "Snow & no bag & moderate (2)",
+                "Just predict for me",
             ],
             "state": "CONTEXT_Q2",
             "context": context,
@@ -352,12 +383,16 @@ def process_turn(
     if state == "CONTEXT_Q2":
         curr_item_display = context.get("item_type", "item").replace("_", " ")
 
+        # Match dataset weather: clear, rain, extreme_heat, snow
         weather_signals = [
-            "sunny", "clear", "hot", "rainy", "rain", "wet", "cold", "chilly",
-            "winter", "humid", "muggy", "cloudy", "storm", "fine", "dry"
+            "clear", "sunny", "bright", "fine", "fair",
+            "rain", "rainy", "raining", "wet", "drizzle", "shower",
+            "extreme heat", "extreme_heat", "hot", "scorching", "heatwave",
+            "snow", "snowy", "cold", "chilly", "freezing", "winter"
         ]
-        baggage_signals = ["bag", "backpack", "carrying", "luggage", "purse", "without bag", "no bag"]
-        fatigue_signals = ["tired", "exhausted", "sleepy", "fresh", "energetic", "moderate", "normal", "active", "ok"]
+        baggage_signals = ["bag", "backpack", "carrying", "luggage", "purse", "without bag", "no bag", "with bag"]
+        # Fatigue 1-5 (1=fresh, 5=very tired)
+        fatigue_signals = ["tired", "exhausted", "sleepy", "fresh", "energetic", "moderate", "normal", "active", "ok", "very tired"]
         skip_signals = ["not sure", "dont know", "don't know", "skip", "any", "predict", "just predict", "default"]
 
         has_weather = any(w in msg_lower for w in weather_signals)
@@ -377,12 +412,13 @@ def process_turn(
                 "session_id": session_id,
                 "bot_message": f"🤔 Please provide a bit more detail about your situation when you last had your **{curr_item_display}** (e.g., weather, whether you were carrying a bag, or how tired you were).\n\nYou can also pick one of the quick combinations below:",
                 "quick_replies": [
-                    "Sunny & carrying bag & tired",
-                    "Sunny & no bag & fresh",
-                    "Rainy & carrying bag & tired",
-                    "Rainy & no bag & fresh",
-                    "Cold & carrying bag & moderate",
-                    "Humid & no bag & moderate",
+                    "Clear & with bag & very tired (5)",
+                    "Clear & no bag & fresh (1)",
+                    "Rain & with bag & tired (4)",
+                    "Rain & no bag & moderate (3)",
+                    "Extreme heat & with bag & very tired (5)",
+                    "Snow & no bag & moderate (2)",
+                    "Just predict for me",
                 ],
                 "state": "CONTEXT_Q2",
                 "context": context,

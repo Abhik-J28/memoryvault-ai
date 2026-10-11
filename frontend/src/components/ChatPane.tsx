@@ -187,17 +187,6 @@ export default function ChatPane({ sessionId, username, onRouteData, onEarlyFind
           <Brain size={16} className="text-sky-400" />
           <span>Conversational Triage</span>
         </div>
-        {onResetSearch && (
-          <button
-            type="button"
-            className="search-another-header-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold text-sky-300 bg-sky-950/60 border border-sky-800/60 hover:bg-sky-600 hover:text-white hover:border-sky-500 transition-all cursor-pointer shadow-sm active:scale-95"
-            onClick={onResetSearch}
-            title="Start a fresh search for another lost item"
-          >
-            <RotateCcw size={12} className="shrink-0" />
-            <span>Search Another</span>
-          </button>
-        )}
       </div>
 
       {/* Messages scroll area */}

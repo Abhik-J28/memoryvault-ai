@@ -4,22 +4,16 @@
  * Phase 1–6 Combined
  *
  * Full application layout:
- *   - Top Utility Bar (brand, status pill, analytics button)
+ *   - Top Header Bar (clean logo + brand + status + sidebar toggle)
+ *   - Slide-out Sidebar (user name, saved places, evaluator analytics, search another item, sign out)
  *   - 55/45 Split-Pane: Chat Pane (left) + Route Inspector (right)
  *   - Analytics Drawer (slide-over)
- *
- * Design tokens applied (from UI/UX Spec §6.1):
- *   --color-brand-dark   : #0f172a  (Slate 900)  — header background
- *   --color-bg-base      : #f8fafc  (Slate 50)   — page canvas
- *   --color-success      : #059669  (Emerald 600) — connected badge
- *   --color-warning      : #d97706  (Amber 600)  — offline badge
- *   --color-brand-primary: #0284c7  (Sky 600)    — accent / button
  */
 
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { BarChart2, Brain, Wifi, WifiOff, RotateCcw, User, Bookmark, LogOut, UserCheck } from 'lucide-react';
+import { BarChart2, Brain, Wifi, WifiOff, Bookmark, LogOut, UserCheck, Menu, X, RotateCcw } from 'lucide-react';
 import ChatPane from '@/components/ChatPane';
 import RouteInspector from '@/components/RouteInspector';
 import AnalyticsDrawer from '@/components/AnalyticsDrawer';
@@ -79,7 +73,7 @@ function StatusPill({ status }: { status: BackendStatus }) {
           />
         </span>
         <Wifi size={12} className="shrink-0" />
-        Backend Connected
+        Connected
       </span>
     );
   }
@@ -94,7 +88,7 @@ function StatusPill({ status }: { status: BackendStatus }) {
         style={{ backgroundColor: '#d97706' }}
       />
       <WifiOff size={12} className="shrink-0" />
-      Backend Offline
+      Offline
     </span>
   );
 }
@@ -108,7 +102,8 @@ export default function Home() {
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [savedLocationsOpen, setSavedLocationsOpen] = useState(false);
-  
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [sessionId, setSessionId] = useState(() => generateSessionId());
 
@@ -170,6 +165,7 @@ export default function Home() {
     setCustomUserRooms([]);
     setRepeatedFindingRooms([]);
     setFindingCounts({});
+    setSidebarOpen(false);
     setAuthModalOpen(true);
   };
 
@@ -182,6 +178,7 @@ export default function Home() {
     setRepeatedFindingRooms([]);
     setFindingCounts({});
     setChatContext({});
+    setSidebarOpen(false);
     fetchLayout().then((l) => setLayout(l)).catch(() => {});
   }, []);
 
@@ -245,22 +242,178 @@ export default function Home() {
       style={{ backgroundColor: '#f8fafc' }}
     >
       {/* ------------------------------------------------------------------ */}
-      {/* TOP UTILITY BAR                                                     */}
+      {/* SIDEBAR BACKDROP                                                   */}
       {/* ------------------------------------------------------------------ */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ------------------------------------------------------------------ */}
-      {/* TOP UTILITY BAR                                                     */}
+      {/* SLIDE-OUT SIDEBAR                                                  */}
+      {/* ------------------------------------------------------------------ */}
+      <aside
+        className={`fixed top-0 right-0 z-50 h-full w-80 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        style={{
+          background: 'linear-gradient(165deg, #0b1329 0%, #0f172a 60%, #1e293b 100%)',
+          borderLeft: '1px solid rgba(148, 163, 184, 0.15)',
+        }}
+      >
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-xl shadow-md bg-gradient-to-tr from-sky-600 to-blue-500 text-white shrink-0"
+              aria-hidden="true"
+            >
+              <Brain size={18} />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-100 tracking-tight leading-none">MemoryVault AI</p>
+              <p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest mt-1">Control Center</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(false)}
+            className="rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+            aria-label="Close sidebar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* User Profile Card */}
+        <div className="p-5 border-b border-slate-800">
+          <div className="flex items-center gap-3.5 rounded-2xl bg-slate-800/80 p-4 border border-slate-700/60 shadow-inner">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-black text-white shadow-md"
+              style={{ background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)' }}
+            >
+              {currentUser ? (currentUser.isGuest ? 'G' : currentUser.username.charAt(0).toUpperCase()) : '?'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-slate-100 truncate">
+                {currentUser ? (currentUser.isGuest ? 'Guest User' : currentUser.username) : 'Not signed in'}
+              </p>
+              <span className="inline-block px-2 py-0.5 mt-1 rounded-full text-[10px] font-semibold tracking-wide bg-sky-950/70 border border-sky-800 text-sky-300">
+                {currentUser?.isGuest ? 'Guest Mode' : 'Authenticated Profile'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Menu List */}
+        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+          {/* Action 1: Search Another Item */}
+          <button
+            type="button"
+            onClick={handleResetSearch}
+            className="sidebar-action-btn group w-full"
+          >
+            <div className="sidebar-action-icon" style={{ background: 'linear-gradient(135deg, #0284c7, #3b82f6)' }}>
+              <RotateCcw size={16} className="text-white" />
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">Search Another Item</p>
+              <p className="text-xs text-slate-400 truncate">Reset and triage a new lost object</p>
+            </div>
+          </button>
+
+          {/* Action 2: Saved Places */}
+          <button
+            type="button"
+            onClick={() => { setSavedLocationsOpen(true); setSidebarOpen(false); }}
+            className="sidebar-action-btn group w-full"
+          >
+            <div className="sidebar-action-icon" style={{ background: 'linear-gradient(135deg, #ec4899, #d946ef)' }}>
+              <Bookmark size={16} className="text-white" />
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">Saved Places</p>
+              <p className="text-xs text-slate-400 truncate">Manage custom habit locations</p>
+            </div>
+          </button>
+
+          {/* Action 3: Evaluator Analytics */}
+          <button
+            type="button"
+            id="evaluator-analytics-toggle"
+            onClick={() => { setAnalyticsOpen(true); setSidebarOpen(false); }}
+            className="sidebar-action-btn group w-full"
+          >
+            <div className="sidebar-action-icon" style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
+              <BarChart2 size={16} className="text-white" />
+            </div>
+            <div className="text-left flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">Evaluator Analytics</p>
+              <p className="text-xs text-slate-400 truncate">View model ROC-AUC & metrics</p>
+            </div>
+          </button>
+
+          {/* Divider */}
+          <div className="pt-2 pb-1">
+            <div className="border-t border-slate-800" />
+          </div>
+
+          {/* Action 4: Sign In / Logout */}
+          {currentUser ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="sidebar-action-btn group w-full text-red-400 hover:text-red-300"
+            >
+              <div className="sidebar-action-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)' }}>
+                <LogOut size={16} className="text-white" />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-100 group-hover:text-red-300 transition-colors">Sign Out</p>
+                <p className="text-xs text-slate-400 truncate">Switch account or go to guest mode</p>
+              </div>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setAuthModalOpen(true); setSidebarOpen(false); }}
+              className="sidebar-action-btn group w-full"
+            >
+              <div className="sidebar-action-icon" style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                <UserCheck size={16} className="text-white" />
+              </div>
+              <div className="text-left flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-100 group-hover:text-white transition-colors">Sign In / Register</p>
+                <p className="text-xs text-slate-400 truncate">Preserve your habits in cloud</p>
+              </div>
+            </button>
+          )}
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="p-5 border-t border-slate-800 bg-slate-900/50">
+          <p className="text-center text-[11px] text-slate-500 font-medium">
+            MemoryVault AI · Domestic Spatial Intelligence
+          </p>
+        </div>
+      </aside>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* TOP HEADER BAR (Logo on left, Status + Sidebar Menu on right)      */}
       {/* ------------------------------------------------------------------ */}
       <header
-        className="flex flex-wrap items-center justify-between gap-4 px-6 py-2.5 shadow-lg border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm"
+        className="flex items-center justify-between px-6 py-3 shadow-lg border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm"
         role="banner"
       >
-        {/* ---- Left: Logo + Brand name ---- */}
+        {/* Left: MemoryVault Brand */}
         <div className="flex items-center gap-3">
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md bg-gradient-to-tr from-sky-600 to-blue-500 text-white shrink-0"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl shadow-lg bg-gradient-to-tr from-sky-600 to-blue-500 text-white shrink-0"
             aria-hidden="true"
           >
-            <Brain size={20} />
+            <Brain size={22} />
           </div>
 
           <div className="flex flex-col leading-tight">
@@ -280,72 +433,19 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ---- Right: User Badge + Actions + Status pill + Analytics button ---- */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* User Profile Pill */}
-          {currentUser ? (
-            <div className="flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-800/90 px-3 py-1.5 text-xs text-slate-200 shadow-inner">
-              <div className="flex items-center gap-1.5 font-bold">
-                <User size={13} className="text-sky-400 shrink-0" />
-                <span className="max-w-[100px] truncate">
-                  {currentUser.isGuest ? 'Guest' : currentUser.username}
-                </span>
-              </div>
-
-              {/* My Saved Places Button */}
-              <button
-                type="button"
-                onClick={() => setSavedLocationsOpen(true)}
-                className="ml-1 flex items-center gap-1.5 rounded-lg border border-pink-500/40 bg-pink-500/20 px-2.5 py-1 text-[11px] font-bold text-pink-300 hover:bg-pink-500/30 hover:border-pink-400 hover:text-pink-100 transition-all active:scale-95 shadow-sm cursor-pointer"
-                title="Manage custom habit location overrides (Pink Map Highlights)"
-              >
-                <Bookmark size={11} className="shrink-0" />
-                Saved Places
-              </button>
-
-              {/* Switch / Logout */}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="ml-1 p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-slate-700/50 transition-all cursor-pointer"
-                title="Switch or Logout User"
-              >
-                <LogOut size={12} />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setAuthModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-sky-400/40 bg-sky-500/15 px-3 py-1.5 text-xs font-bold text-sky-300 hover:bg-sky-500/25 hover:text-white transition-all shadow-sm active:scale-95 cursor-pointer"
-            >
-              <UserCheck size={13} className="shrink-0" />
-              Sign In / Register
-            </button>
-          )}
-
-          {/* Primary Action: Search Another Item */}
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 border border-sky-400/30 shadow-md shadow-sky-950/40 transition-all duration-150 active:scale-95 cursor-pointer"
-            onClick={handleResetSearch}
-            title="Start a new prediction session for another misplaced item"
-          >
-            <RotateCcw size={13} className="shrink-0" />
-            Search Another Item
-          </button>
-
+        {/* Right: Status Pill + Sidebar Hamburger Button */}
+        <div className="flex items-center gap-3">
           <StatusPill status={backendStatus} />
 
           <button
-            id="evaluator-analytics-toggle"
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white hover:bg-slate-700 hover:border-sky-500/50 transition-all active:scale-95 cursor-pointer shadow-sm"
-            onClick={() => setAnalyticsOpen(true)}
-            aria-label="Open Evaluator Analytics drawer"
+            id="sidebar-toggle-btn"
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/90 px-3.5 py-1.5 text-slate-200 hover:text-white hover:bg-slate-700 hover:border-sky-500/60 transition-all active:scale-95 cursor-pointer shadow-md"
+            aria-label="Open menu sidebar"
           >
-            <BarChart2 size={13} className="shrink-0 text-sky-400" />
-            Evaluator Analytics
+            <Menu size={17} className="text-sky-400" />
+            <span className="text-xs font-bold uppercase tracking-wider">Menu</span>
           </button>
         </div>
       </header>
@@ -362,7 +462,6 @@ export default function Home() {
             username={currentUser?.isGuest ? null : currentUser?.username}
             onRouteData={handleRouteData}
             onEarlyFindings={handleEarlyFindings}
-            onResetSearch={handleResetSearch}
           />
         </div>
 
@@ -391,7 +490,6 @@ export default function Home() {
             }}
           />
         </div>
-
       </main>
 
       {/* ------------------------------------------------------------------ */}
