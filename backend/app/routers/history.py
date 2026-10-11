@@ -11,6 +11,7 @@ Endpoints:
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -195,29 +196,36 @@ async def log_search_outcome(payload: SearchHistoryLogRequest) -> dict:
         except Exception:
             pass
 
-    # 3. Synchronise with Supabase session_logs table
+    # 3. Synchronise with Supabase search_history and session_logs tables
     supabase_synced = False
     try:
-        sb_payload: dict[str, Any] = {
-            "session_id": payload.session_id or f"hist-{local_id}",
-            "item_type": payload.item_type,
-            "found_location": payload.actual_found_zone,
+        sess_uuid = str(uuid.uuid4())
+        sh_payload: dict[str, Any] = {
+            "session_id": sess_uuid,
+            "item_type": payload.item_type.strip().lower(),
+            "predicted_top_zone": payload.predicted_zone or "foyer_credenza",
+            "actual_found_zone": payload.actual_found_zone.strip().lower(),
+            "context_features": {
+                "user_id": user_id_clean,
+                "original_session_id": payload.session_id,
+                "time_of_day": payload.time_of_day,
+                "day_of_week": payload.day_of_week,
+                "weather_condition": payload.weather_condition,
+                "carrying_baggage": payload.carrying_baggage,
+                "fatigue_level": payload.fatigue_level,
+                "notes": payload.notes,
+            },
         }
-        if payload.time_of_day is not None:
-            sb_payload["time_of_day"] = payload.time_of_day
-        if payload.day_of_week is not None:
-            sb_payload["day_of_week"] = payload.day_of_week
-        if payload.weather_condition is not None:
-            sb_payload["weather_condition"] = payload.weather_condition
-        if payload.carrying_baggage is not None:
-            sb_payload["carrying_baggage"] = payload.carrying_baggage
-        if payload.fatigue_level is not None:
-            sb_payload["fatigue_level"] = payload.fatigue_level
+        supabase.table("search_history").insert(sh_payload).execute()
 
-        supabase.table("session_logs").insert(sb_payload).execute()
+        sl_payload: dict[str, Any] = {
+            "session_token": sess_uuid,
+            "context_state": sh_payload,
+        }
+        supabase.table("session_logs").insert(sl_payload).execute()
         supabase_synced = True
-    except Exception:
-        # Graceful degradation if Supabase network is unavailable
+    except Exception as exc:
+        print(f"[Supabase history sync error]: {exc}")
         supabase_synced = False
 
     return {

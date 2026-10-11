@@ -9,6 +9,7 @@ Auth & Storage: User Accounts, Custom Locations, Session Logs & Item Findings
 """
 
 import json
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -185,6 +186,17 @@ async def auth_register(request: AuthRequest) -> dict:
     res = register_user(request.username, request.password)
     if not res["success"]:
         return {"success": False, "error": res["error"]}
+
+    # Mirror user to Supabase profiles
+    try:
+        user_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, request.username.strip().lower()))
+        supabase.table("profiles").insert({
+            "id": user_uuid,
+            "email": f"{request.username.strip().lower()}@memoryvault.ai",
+        }).execute()
+    except Exception:
+        pass
+
     return {"success": True, "user": res["user"]}
 
 
@@ -257,26 +269,45 @@ async def feedback(request: FeedbackRequest) -> dict:
     """
     Records a "Found Here" event from the user and logs empirical repeated findings.
     """
-    log_entry = {
-        "session_id": request.session_id,
-        "item_type": request.item_type,
-        "found_location": request.found_location,
-        **request.context,
-    }
+    session_uuid = str(uuid.uuid4())
+    context_data = request.context or {}
+    pred_zone = context_data.get("predicted_location") or context_data.get("top_zone") or "unknown"
+    item_str = (request.item_type or str(context_data.get("item_type") or "unknown")).strip().lower()
 
+    # 1. Synchronise with Supabase search_history
     try:
-        supabase.table("session_logs").insert(log_entry).execute()
-    except Exception:
-        # Graceful degradation — don't fail the user experience
-        pass
+        supabase.table("search_history").insert({
+            "session_id": session_uuid,
+            "item_type": item_str,
+            "predicted_top_zone": pred_zone,
+            "actual_found_zone": request.found_location,
+            "context_features": {
+                "original_session_id": request.session_id,
+                **context_data,
+            },
+        }).execute()
+    except Exception as exc:
+        print(f"[Supabase search_history feedback error]: {exc}")
 
-    # Record into empirical repeated user findings DB (Orange Highlights)
-    # Strictly isolated per authenticated user; guest users are explicitly excluded.
-    username = str(request.username or request.context.get("username") or "").strip().lower()
-    item_type = (request.item_type or str(request.context.get("item_type") or "")).strip().lower()
-    if username and username != "guest" and item_type and request.found_location:
+    # 2. Synchronise with Supabase session_logs
+    try:
+        supabase.table("session_logs").insert({
+            "session_token": session_uuid,
+            "context_state": {
+                "session_id": request.session_id,
+                "item_type": item_str,
+                "found_location": request.found_location,
+                **context_data,
+            },
+        }).execute()
+    except Exception as exc:
+        print(f"[Supabase session_logs feedback error]: {exc}")
+
+    # 3. Record into empirical repeated user findings DB (Orange Highlights)
+    username = str(request.username or context_data.get("username") or "").strip().lower()
+    if username and username != "guest" and item_str and request.found_location:
         try:
-            record_item_finding(username, item_type, request.found_location)
+            record_item_finding(username, item_str, request.found_location)
         except Exception:
             pass
 
