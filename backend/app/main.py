@@ -33,7 +33,7 @@ from app.db_local import (
     get_custom_locations,
     delete_custom_location,
 )
-from app.routers import analytics, search
+from app.routers import analytics, history, search
 
 # ---------------------------------------------------------------------------
 # Application instance
@@ -72,6 +72,7 @@ app.add_middleware(
 
 app.include_router(analytics.router)
 app.include_router(search.router)
+app.include_router(history.router)
 
 # ---------------------------------------------------------------------------
 # Health Check Endpoint

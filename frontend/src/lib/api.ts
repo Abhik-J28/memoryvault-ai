@@ -263,3 +263,63 @@ export async function fetchLayout(): Promise<LayoutData> {
   if (!res.ok) throw new Error(`Layout error: ${res.status}`);
   return res.json();
 }
+
+// ---------------------------------------------------------------------------
+// History API (Guest Quick-Search vs. Authenticated Mode)
+// ---------------------------------------------------------------------------
+
+export interface UserHistoryEntry {
+  id: number;
+  user_id?: string | null;
+  session_id?: string | null;
+  item_type: string;
+  predicted_zone?: string | null;
+  actual_found_zone: string;
+  time_of_day?: number | null;
+  day_of_week?: number | null;
+  weather_condition?: string | null;
+  carrying_baggage?: boolean | null;
+  fatigue_level?: number | null;
+  notes?: string | null;
+  created_at?: string;
+}
+
+export interface UserHistoryResponse {
+  user_id: string;
+  total_records: number;
+  history: UserHistoryEntry[];
+}
+
+export async function logSearchOutcome(payload: {
+  user_id?: string | null;
+  session_id?: string | null;
+  item_type: string;
+  predicted_zone?: string | null;
+  actual_found_zone: string;
+  time_of_day?: number | null;
+  day_of_week?: number | null;
+  weather_condition?: string | null;
+  carrying_baggage?: boolean | null;
+  fatigue_level?: number | null;
+  notes?: string | null;
+}): Promise<{ status: string; message: string; mode: string }> {
+  const res = await fetch(`${BACKEND_URL}/api/v1/history/log`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+export async function getUserSearchHistory(
+  userId: string,
+  limit: number = 50,
+): Promise<UserHistoryResponse> {
+  const res = await fetch(
+    `${BACKEND_URL}/api/v1/history/user/${encodeURIComponent(userId)}?limit=${limit}`,
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to fetch history for user: ${userId}`);
+  }
+  return res.json();
+}
